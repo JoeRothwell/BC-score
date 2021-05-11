@@ -46,7 +46,7 @@ data_xnames_sums <- data_xnames %>%
           alcohol = (sum(x25, x26, x27, x28, x29, x30, x31, x58) - x25_3)/7,
           aUPF = sum(x10_4, x10_7, x11_2, x11_3, x11_5, x11_6, x14, x15, x16_3, x16_4, 
                      x16_5, x16_6, x17_4, x17_5, x17_6, x22, x23, x24, x33, x47_1, 
-                     x47_5, x47_8, x48, x50, x54, x55, x56, x57, 
+                     x47_5, x47_8, x50, x54, x55, 
                      MG2, MG3, MG4, MG12, MG15, VIN1, VIN2)/7, #g/day
           total_food = 
             sum(x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, 
