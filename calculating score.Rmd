@@ -88,10 +88,10 @@ df.scores <- clean_data %>%
          sc.TT2  = ifelse(TTAILLE <= 80, 0.25, 0),
          sc.PA1  = ifelse(TotalAPQ3 >= 9.375, 0.5, 0), 
          sc.PA2  = ifelse(TotalAPQ3 >= 18.75, 0.5, 0),
-         sc.FV1 = ifelse(fruitveg >= 200, 0.5, 0),
-         sc.FV2 = ifelse(fruitveg >= 400, 0.5, 0),
-         sc.TDF1 = ifelse(TDF >= 15, 0.5, 0),
-         sc.TDF2 = ifelse(TDF >= 30, 0.5, 0),
+         sc.FV1 = ifelse(fruitveg >= 200, 0.25, 0),
+         sc.FV2 = ifelse(fruitveg >= 400, 0.25, 0),
+         sc.TDF1 = ifelse(TDF >= 15, 0.25, 0),
+         sc.TDF2 = ifelse(TDF >= 30, 0.25, 0),
          sc.UPF1 = ifelse(percent_aUPF < tertile_UPF2, 0.5, 0),
          sc.UPF2 = ifelse(percent_aUPF < tertile_UPF1, 0.5, 0),
          sc.MEAT1 = ifelse(Rmeat < 500 & Pmeat < 100, 0.5, 0),
@@ -113,7 +113,6 @@ df.scores <- clean_data %>%
 
 
 ```{r}
-
 hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"))
 ```
 ```{r}
@@ -128,17 +127,41 @@ summary(table_scores)
 ```
 
 ```{r}
-
+table_scoresFCT <- table_scores %>%
+  mutate(CT = as.factor(CT), sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
+head(table_scoresFCT)
 ```
 
 ```{r}
-
+all_scores <- table_scoresFCT %>%
+  select(sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
+head(all_scores)
+summary(all_scores)
 ```
 
 ```{r}
-
+all_scoresCTRLS <- table_scoresFCT %>%
+  filter(CT == 0) %>% 
+  select(CT, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
+head(all_scoresCTRLS)
+summary(all_scoresCTRLS)
 ```
 
 ```{r}
+all_scoresCASES <- table_scoresFCT %>%
+  filter(CT == 1) %>% 
+  select(CT, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
+head(all_scoresCASES)
+summary(all_scoresCASES)
+```
 
+```{r}
+summary(table_scores$fruitveg)
+```
+
+```{r}
+table_alcool <- df.scores %>%
+  select (alcool, ALCOHOL, alcohol)
+head(table_alcool)
+summary(table_alcool)
 ```
