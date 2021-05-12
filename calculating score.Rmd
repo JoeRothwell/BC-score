@@ -40,7 +40,6 @@ scoredata <- meta %>%
 #Renaming all (food) columns starting with "_" 
 data_xnames <- scoredata %>%
   rename_at(vars(starts_with('_')), funs(str_replace(., '_', 'x'))) 
-head(data_xnames)
 ```
 
 ```{r}
@@ -161,7 +160,43 @@ summary(table_scores$fruitveg)
 
 ```{r}
 table_alcool <- df.scores %>%
-  select (alcool, ALCOHOL, alcohol)
+  select (ident, alcool, ALCOHOL, alcohol)
 head(table_alcool)
 summary(table_alcool)
+```
+
+
+```{r}
+table_fruitveg <- df.scores %>%
+  select (ident, CT, x2, x3, x35, x40, x53, fruitveg, sc.FV, score)
+head(table_fruitveg)
+summary(table_fruitveg)
+```
+
+# Get metabolomics data (unscaled)
+```{r}
+ints <- read_tsv("1510_XMetaboliteE3N_cpmg_unscaled.txt") #contains the whole group
+ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
+ints.cases <- ints[meta$CT == 1, ] #contains only the cases
+head(ints)
+
+# Scale to unit variance
+metabolo <- scale(ints)
+head(metabolo)
+```
+
+# Correlations
+```{r}
+# Replace intake = NA with median value
+#alim$VIN[is.na(alim$VIN)] <- median(alim$VIN, na.rm = T)
+
+# Simple correlation for wine
+# Exclude zero intakes with alim$VIN > 0
+
+simplecor <- function(x) cor.test(df.scores$alcohol, x, method = "spearman")
+corlist <- apply(metabolo[df.scores$alcohol, ], 2, simplecor)
+
+# Convert to data frame and add compound names, order by correlation
+library(broom)
+cordat <- map_dfr(corlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 ```
