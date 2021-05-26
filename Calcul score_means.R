@@ -58,10 +58,6 @@ data_xnames_sums <- data_xnames %>%
                 SUCRE, EDULC, LAIT, VIN, MG)) %>% #g/day
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
 
-#Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
-#clean_data <- data_xnames_sums %>% 
-#  filter(!is.na(percent_aUPF) & !is.na(allaitement_dureecum) & !is.na(TTAILLE))
-
 # Replace intake = NA with median value
 # remplacement par la moyenne plutot qu'enlever les participantes avec des données manquantes pour pouvoir calculer les corrélations après  
 data_xnames_sums$percent_aUPF[is.na(data_xnames_sums$percent_aUPF)] <- median(data_xnames_sums$percent_aUPF, na.rm = T)
