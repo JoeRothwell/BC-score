@@ -34,6 +34,7 @@ scoredata <- meta %>%
   left_join(id, by = "CODBMB") %>% left_join(alim, by = "ident") %>%
   left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
   left_join(physact, by = "ident")
+#dim(scoredata)
 ```
 
 ```{r}
@@ -46,29 +47,30 @@ data_xnames <- scoredata %>%
 #Calculating g/day intake of total fruits & vegetables, red meat, processed meat, drinks, alcohol, aUPF, total food intake and percentage of aUPF in total food intake
 data_xnames_sums <- data_xnames %>%
   rowwise() %>%
-  mutate (fruitveg = sum(x2, x3, x35, x40, x53)/7, #g/day
-          Rmeat = sum(x46_3, x46_4, x46_6, x46_7, x46_9, x47_2), #g/week
-          Pmeat = sum(x19, x36, x37, x41_4, x41_7, x42, x47_6), #g/week
-          sugary_drinks = sum(x7, x21)/7, #g/day
-          alcohol = (sum(x25, x26, x27, x28, x29, x30, x31, x58) - x25_3)/7,
+  mutate (fruitveg = sum(x2, x3, x35, x40, x53), #g/day
+          Rmeat = sum(x46_3, x46_4, x46_6, x46_7, x46_9, x47_2)*7, #g/week
+          Pmeat = sum(x19, x36, x37, x41_4, x41_7, x42, x47_6)*7, #g/week
+          sugary_drinks = sum(x7, x21), #g/day
           aUPF = sum(x10_4, x10_7, x11_2, x11_3, x11_5, x11_6, x14, x15, x16_3, x16_4, 
                      x16_5, x16_6, x17_4, x17_5, x17_6, x22, x23, x24, x33, x47_1, 
                      x47_5, x47_8, x50, x54, x55, 
-                     MG2, MG3, MG4, MG12, MG15, VIN1, VIN2)/7, #g/day
+                     MG2, MG3, MG4, MG12, MG15, VIN1, VIN2), #g/day
           total_food = 
             sum(x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, 
                 x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, 
                 x29, x30, x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, 
                 x42, x43, x44, x45, x46, x47, x48, x49, x50, x51, x52, x53, x54, 
                 x55, x56, x57, x58, x59, 
-                SUCRE, EDULC, LAIT, VIN, MG)/7) %>% #g/day
+                SUCRE, EDULC, LAIT, VIN, MG)) %>% #g/day
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
+#dim(data_xnames_sums)
 ```
 
 ```{r}
 #Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
 clean_data <- data_xnames_sums %>% 
   filter(!is.na(percent_aUPF) & !is.na(allaitement_dureecum) & !is.na(TTAILLE))
+#dim(clean_data)
 ```
 
 ```{r}
@@ -97,8 +99,8 @@ df.scores <- clean_data %>%
          sc.MEAT2 = ifelse(Rmeat < 500 & Pmeat < 21, 0.5, 0),
          sc.SD1 = ifelse(sugary_drinks <= 250, 0.5, 0),
          sc.SD2 = ifelse(sugary_drinks == 0, 0.5, 0),
-         sc.ALC1 = ifelse(alcohol <= 14, 0.5, 0),
-         sc.ALC2 = ifelse(alcohol == 0, 0.5, 0),
+         sc.ALC1 = ifelse(ALCOHOL <= 14, 0.5, 0),
+         sc.ALC2 = ifelse(ALCOHOL == 0, 0.5, 0),
          sc.BFD1 = ifelse(nullipare == 0 & allaitement_dureecum > 0 & allaitement_dureecum < 6, 0.5, 0),
          sc.BFD2 = ifelse(nullipare == 0 & allaitement_dureecum > 6, 0.5, 0),
          # Add up sc.BMI + sc.TT + sc.PA + other recommendations to get score         
@@ -108,17 +110,21 @@ df.scores <- clean_data %>%
          sc.BFD = sc.BFD1 + sc.BFD2,
          # Get overall score
          score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD)
+#dim(df.scores)
 ```
 
-
+Histogramme de la répartition des scores
 ```{r}
 hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"))
 ```
+
 ```{r}
 # Create a table containing only data relevant for the score
 table_scores <- df.scores %>%
-  select(CODBMB, CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcohol, nullipare, allaitement_dureecum, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
-head(table_scores)
+  select(CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, nullipare, allaitement_dureecum, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
+#head(table_scores)
+#dim(table_scores)
+plot(table_scores) 
 ```
 
 ```{r}
@@ -126,51 +132,31 @@ summary(table_scores)
 ```
 
 ```{r}
+# Mutate score components as factors
 table_scoresFCT <- table_scores %>%
   mutate(CT = as.factor(CT), sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
 head(table_scoresFCT)
+dim(table_scoresFCT)
 ```
 
 ```{r}
+# Create a table with only score data
 all_scores <- table_scoresFCT %>%
-  select(sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
-head(all_scores)
+  select(CT, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)%>%
+  filter(CT == 1)
+#head(all_scores)
 summary(all_scores)
+dim(all_scores)
 ```
 
 ```{r}
+# Data tables specific to cases and controls with score data only and as factors
 all_scoresCTRLS <- table_scoresFCT %>%
   filter(CT == 0) %>% 
   select(CT, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
-head(all_scoresCTRLS)
-summary(all_scoresCTRLS)
-```
-
-```{r}
 all_scoresCASES <- table_scoresFCT %>%
   filter(CT == 1) %>% 
   select(CT, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
-head(all_scoresCASES)
-summary(all_scoresCASES)
-```
-
-```{r}
-summary(table_scores$fruitveg)
-```
-
-```{r}
-table_alcool <- df.scores %>%
-  select (ident, alcool, ALCOHOL, alcohol)
-head(table_alcool)
-summary(table_alcool)
-```
-
-
-```{r}
-table_fruitveg <- df.scores %>%
-  select (ident, CT, x2, x3, x35, x40, x53, fruitveg, sc.FV, score)
-head(table_fruitveg)
-summary(table_fruitveg)
 ```
 
 # Get metabolomics data (unscaled)
@@ -188,13 +174,14 @@ head(metabolo)
 # Correlations
 ```{r}
 # Replace intake = NA with median value
-#alim$VIN[is.na(alim$VIN)] <- median(alim$VIN, na.rm = T)
+alim$VIN[is.na(alim$VIN)] <- median(alim$VIN, na.rm = T)
 
 # Simple correlation for wine
 # Exclude zero intakes with alim$VIN > 0
 
-simplecor <- function(x) cor.test(df.scores$alcohol, x, method = "spearman")
-corlist <- apply(metabolo[df.scores$alcohol, ], 2, simplecor)
+simplecor <- function(x) cor.test(alim$VIN[alim$VIN > 0], x, method = "spearman")
+corlist <- apply(metabolo[alim$VIN > 0, ], 2, simplecor)
+print(corlist)
 
 # Convert to data frame and add compound names, order by correlation
 library(broom)
