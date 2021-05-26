@@ -1,8 +1,9 @@
 ## Version of the code where lines with missing data for the score are deleted
-
+library(ggplot2)
 library(haven)
 library(tidyverse)
 library(readxl)
+library(grid)
 
 # Datasets-----------------------------------------------------------------------
 
@@ -59,8 +60,11 @@ data_xnames_sums <- data_xnames %>%
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
 
 #Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
-clean_data <- data_xnames_sums %>% 
-  filter(!is.na(percent_aUPF) & !is.na(allaitement_dureecum) & !is.na(TTAILLE))
+data_UPF <- data_xnames_sums %>% pull(percent_aUPF)
+data_allaitement <- data_xnames_sums %>% pull(allaitement_dureecum)
+data_TTAILLE <- data_xnames_sums %>% pull(TTAILLE)
+rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) #create a vector containing row numbers with missing data
+clean_data <- data_xnames_sums[-rows_missing_data,] #remove rows where data is missing
 
 #Tertiles : needed for aUPF consumption cutoff points
 tertiles_UPF <- quantile(clean_data$percent_aUPF, probs = c(1/3, 2/3))
@@ -99,35 +103,185 @@ df.scores <- clean_data %>%
          score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD)
 
 # Score distribution histogram
-hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"))
+hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"), xlim=range(2, 8))
 
 # Create a table containing only data relevant for the score
 table_scores <- df.scores %>%
-  select(CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score)
+  select(CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
+  mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
 
-# Metabolomics dataset---------------------------------------------------------------------
+# Graphs for data distribution ---------------------------------------------------------------------
+
+#Defining text for different points iun WCRF/AICR score
+rec0 <- grobTree(textGrob("0", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
+rec025 <- grobTree(textGrob("0.25", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
+rec05 <- grobTree(textGrob("0.5", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
+rec1 <- grobTree(textGrob("1", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
+
+# BMI
+ggplot(table_scores) +
+  aes(x = BMI, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x = "BMI (kg/m2)", title = "BMI distribution") +
+  geom_vline(xintercept = 25, linetype = "dotted") + geom_vline(xintercept = 18.5, linetype = "dashed") + geom_vline(xintercept = 30, linetype = "dashed") +
+  annotation_custom(rec0, xmax = 18.5, ymin = 250) +
+  annotation_custom(rec0, xmin = 30, ymin = 250) +
+  annotation_custom(rec025, xmin = 25, xmax = 30, ymin = 250) +
+  annotation_custom(rec05, xmin =18.5, xmax = 25, ymin = 250) 
+
+ggplot(table_scores) +
+  aes(x = BMI, fill = CT) +
+  geom_histogram(color = "black", show.legend = FALSE) +
+  facet_grid(CT ~ .) +
+  labs(x = "BMI")
+
+# Tour de taille
+ggplot(table_scores) +
+  aes(x = TTAILLE, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Waist circumference (cm)", title = "Waist circumference distribution") +
+  geom_vline(xintercept = 88, linetype = "dashed") + geom_vline(xintercept = 80, linetype = "dashed") +
+  annotation_custom(rec0, xmax = 80, ymin = 200) + 
+  annotation_custom(rec025, xmin =80, xmax = 88, ymin = 200) + 
+  annotation_custom(rec05, xmin =88, ymin = 200) 
+
+# Activite physique
+ggplot(table_scores) +
+  aes(x = TotalAPQ3, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Physical activity (MET hours/week)", title = "Physical activity distribution") +
+  geom_vline(xintercept = 9.375, linetype = "dashed") + geom_vline(xintercept = 18.75, linetype = "dashed") +
+  annotation_custom(rec0, xmax = 9, ymin = 175) + 
+  annotation_custom(rec05, xmin =9.4, xmax = 18, ymin = 175) + 
+  annotation_custom(rec1, xmin =19, ymin = 175) 
+
+# Fruits et legumes
+ggplot(table_scores) +
+  aes(x = fruitveg , fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Fruits & vegetables (g/day)", title = "Fruits and vegetables consumption distribution") +
+  geom_vline(xintercept = 200, linetype = "dashed") + geom_vline(xintercept = 400, linetype = "dashed") +
+  annotation_custom(rec0, xmax = 200, ymin = 175) + 
+  annotation_custom(rec025, xmin =200, xmax = 400, ymin = 175) + 
+  annotation_custom(rec05, xmin =400, ymin = 175) 
+
+# Fibres
+ggplot(table_scores) +
+  aes(x = TDF, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Fiber (g/day)", title = "Total fiber consumption distribution") +
+  geom_vline(xintercept = 15, linetype = "dashed") + geom_vline(xintercept = 30, linetype = "dashed") +
+  annotation_custom(rec0, xmax = 15, ymin = 175) + 
+  annotation_custom(rec025, xmin =15, xmax = 30, ymin = 175) + 
+  annotation_custom(rec05, xmin =30, ymin = 175) 
+
+# aUPF
+ggplot(table_scores) +
+  aes(x = percent_aUPF, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Percentage of aUPF in total food consumption", title = "Percentage of aUPF distribution") +
+  geom_vline(xintercept = tertile_UPF1, linetype = "dashed") + geom_vline(xintercept = tertile_UPF2, linetype = "dashed") +
+  annotation_custom(rec0, xmin = tertile_UPF2, ymin = 150) + 
+  annotation_custom(rec05, xmin =tertile_UPF1, xmax = tertile_UPF2, ymin = 150) + 
+  annotation_custom(rec1, xmax =tertile_UPF1, ymin = 150) 
+
+# meat ??
+
+# Sugary drinks
+ggplot(table_scores) +
+  aes(x = sugary_drinks, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Sugary drinks (g/day)", title = "Sugary drinks consumption distribution") +
+  geom_vline(xintercept = 0, linetype = "dashed") + geom_vline(xintercept = 250, linetype = "dashed") +
+  annotation_custom(rec0, xmin = 250, ymin = 600) + 
+  annotation_custom(rec05, xmin =0, xmax = 250, ymin = 600) + 
+  annotation_custom(rec1, xmax =0, ymin = 600)
+
+# Alcohol
+ggplot(table_scores) +
+  aes(x =ALCOHOL, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Total ethanol (g/day)", title = "Total ethanol consumption distribution") +
+  geom_vline(xintercept = 0, linetype = "dashed") + geom_vline(xintercept = 14, linetype = "dashed") +
+  annotation_custom(rec0, xmin = 14, ymin = 325) + 
+  annotation_custom(rec05, xmin =0, xmax = 14, ymin = 325) + 
+  annotation_custom(rec1, xmax =0, ymin = 325)
+
+# Allaitement
+ggplot(table_scores) +
+  aes(x =allaitement_dureecum, fill = CT) +
+  geom_histogram(position = "dodge", bins = 15) +
+  labs(x ="Breastfeeding (months)", title = "Breastfeeding distribution") +
+  geom_vline(xintercept = 0, linetype = "dashed") + geom_vline(xintercept = 6, linetype = "dashed") +
+  annotation_custom(rec0, xmax = 0, ymin = 350) + 
+  annotation_custom(rec05, xmin =0, xmax = 6, ymin = 350) + 
+  annotation_custom(rec1, xmin =6, ymin = 350)
+
+#BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum
+  
+# Metabolomics dataset ---------------------------------------------------------------------
 
 # Get metabolomics data (unscaled)
 ints <- read_tsv("1510_XMetaboliteE3N_cpmg_unscaled.txt") #contains the whole group
-ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
-ints.cases <- ints[meta$CT == 1, ] #contains only the cases
+ints_clean <- ints[-rows_missing_data,] #remove rows where data is missing
+#ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
+#ints.cases <- ints[meta$CT == 1, ] #contains only the cases
 
 # Scale to unit variance
 metabolo <- scale(ints)
 
-# Correlations---------------------------------------------------------------------
-library(corrplot)
+# WCRF Correlations---------------------------------------------------------------------
 
-# Simple correlation for alcohol
-cor.test(table_scores$ALCOHOL, metabolo$Acetate)
-length(metabolo$Acetate)
-head(table_scores)
-dim(metabolo)
-
-simplecor <- function(x) cor.test(alim$ALCOHOL[alim$VIN > 0], x, method = "spearman")
-corlist <- apply(metabolo[alim$VIN > 0, ], 2, simplecor)
-print(corlist)
+# Simple correlation for WCRF score - Spearman correlation
+simplecorSP <- function(x) cor.test(table_scores$score[table_scores$score > 0], x, method = "spearman")
+corlistSP <- apply(metabolo[table_scores$score > 0, ], 2, simplecorSP)
+print(corlistSP)
 
 # Convert to data frame and add compound names, order by correlation
 library(broom)
-cordat <- map_dfr(corlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+cordatSP
+
+# Simple correlation for WCRF score - Pearsons correlation
+simplecorPE <- function(x) cor.test(table_scores$score[table_scores$score > 0], x, method = "pearson")
+corlistPE <- apply(metabolo[table_scores$score > 0, ], 2, simplecorPE)
+print(corlistPE)
+
+# Convert to data frame and add compound names, order by correlation
+cordatPE <- map_dfr(corlistPE, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+cordatPE
+
+# Plot correlations
+library(ggplot2)
+plotSP <- ggplot(cordatSP, aes(method, compound)) +
+  geom_tile(aes(fill = estimate))
+plotSP
+
+plotPE <- ggplot(cordatPE, aes(method, compound)) +
+  geom_tile(aes(fill = estimate))
+plotPE
+
+# Components Correlations---------------------------------------------------------------------
+
+# Simple correlation for alcohol
+simplecor.ALC <- function(x) cor.test(table_scores$ALCOHOL[table_scores$ALCOHOL > 0], x, method = "spearman")
+corlist.ALC <- apply(metabolo[table_scores$ALCOHOL > 0, ], 2, simplecor.ALC)
+
+# Convert to data frame and add compound names, order by correlation
+cordat.ALC <- map_dfr(corlist.ALC, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+
+# Simple correlation for BMI
+simplecor.BMI <- function(x) cor.test(table_scores$BMI[table_scores$BMI > 0], x, method = "spearman")
+corlist.BMI <- apply(metabolo[table_scores$BMI > 0, ], 2, simplecor.BMI)
+
+# Convert to data frame and add compound names, order by correlation
+cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+
+# Plot metabolites distribution --------------------------------------
+normal_distrib <- function (x) {
+  qqnorm(metabolo[,x], main =colnames(metabolo)[x])
+  qqline(metabolo[,x])
+}
+
+n <- ncol(metabolo)
+for(i in c(1:n)){normal_distrib(i)}
