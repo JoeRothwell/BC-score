@@ -92,8 +92,8 @@ df.scores <- clean_data %>%
          sc.SD2 = ifelse(sugary_drinks == 0, 0.5, 0),
          sc.ALC1 = ifelse(ALCOHOL <= 14, 0.5, 0),
          sc.ALC2 = ifelse(ALCOHOL == 0, 0.5, 0),
-         sc.BFD1 = ifelse(nullipare == 0 & allaitement_dureecum > 0 & allaitement_dureecum < 6, 0.5, 0),
-         sc.BFD2 = ifelse(nullipare == 0 & allaitement_dureecum > 6, 0.5, 0),
+         sc.BFD1 = ifelse(allaitement_dureecum > 0, 0.5, 0),
+         sc.BFD2 = ifelse(allaitement_dureecum >= 6, 0.5, 0),
          # Add up sc.BMI + sc.TT + sc.PA + other recommendations to get score         
          sc.BMI = sc.BMI1 + sc.BMI2, sc.TT = sc.TT1 + sc.TT2, sc.PA = sc.PA1 + sc.PA2,
          sc.FV = sc.FV1 + sc.FV2, sc.TDF = sc.TDF1 + sc.TDF2, sc.UPF= sc.UPF1 + sc.UPF2, sc.MEAT = sc.MEAT1 + sc.MEAT2,
@@ -110,24 +110,87 @@ table_scores <- df.scores %>%
   select(CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
   mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
 
+ggplot(table_scores) +
+  aes(x = score, fill = CT, xmin = 2, xmax =8) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 22) +
+  labs(x = "WCRF/AICR score", title = "WCRF/AICR scores in the E3N cancer group") 
+
+#table_scores2 <- df.scores %>%
+#  select(CT, sc.BMI,  sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
+#  mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
+#scores_fct <- table_scores2 %>%
+#  mutate(CT = as.factor(CT), sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
+
+
+# Test Student - Score components ----------------------------------------------------------------------
+
+# Checking variables normal distribution
+
+#BMI
+qqnorm(table_scores$BMI, main = 'BMI')
+qqline(table_scores$BMI)
+#Waist circumference
+qqnorm(table_scores$TTAILLE, main = 'Waist circumference')
+qqline(table_scores$TTAILLE)
+#Physical activity
+qqnorm(table_scores$TotalAPQ3, main = 'Physical activity')
+qqline(table_scores$TotalAPQ3)
+#Fruits and vegetables
+qqnorm(table_scores$fruitveg, main = 'Fruits & vegetables')
+qqline(table_scores$fruitveg)
+#Total fiber consumption
+qqnorm(table_scores$TDF, main = 'Fiber')
+qqline(table_scores$TDF)
+#Red meat
+qqnorm(table_scores$Rmeat, main = 'Red meat')
+qqline(table_scores$Rmeat)
+#Processed meat
+qqnorm(table_scores$Pmeat, main = 'Processed meat')
+qqline(table_scores$Pmeat)
+#Percentage of aUPF
+qqnorm(table_scores$percent_aUPF, main = 'aUPF')
+qqline(table_scores$percent_aUPF)
+#Sugary drinks
+qqnorm(table_scores$sugary_drinks, main = 'Sugary drinks')
+qqline(table_scores$sugary_drinks)
+#Alcohol
+qqnorm(table_scores$ALCOHOL, main = 'Ethanol')
+qqline(table_scores$ALCOHOL)
+#Breastfeeding
+qqnorm(table_scores$allaitement_dureecum, main = 'Durée cumulée allaitement')
+qqline(table_scores$allaitement_dureecum)
+#wCRF/AICR score
+qqnorm(table_scores$score, main = 'WCRF/AICR score')
+qqline(table_scores$score)
+
+
+t.test(BMI ~ CT, data = table_scores)
+var.test(BMI ~ CT, data = table_scores)
+
 # Graphs for data distribution ---------------------------------------------------------------------
 
 #Defining text for different points iun WCRF/AICR score
-rec0 <- grobTree(textGrob("0", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
-rec025 <- grobTree(textGrob("0.25", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
-rec05 <- grobTree(textGrob("0.5", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
-rec1 <- grobTree(textGrob("1", gp=gpar(col="#000099", fontsize="12", fontface="italic")))
+rec0 <- grobTree(textGrob("0", gp=gpar(col="#000099", fontsize="11", fontface="bold")))
+rec025 <- grobTree(textGrob("0.25", gp=gpar(col="#000099", fontsize="11", fontface="bold")))
+rec05 <- grobTree(textGrob("0.5", gp=gpar(col="#000099", fontsize="11", fontface="bold")))
+rec1 <- grobTree(textGrob("1", gp=gpar(col="#000099", fontsize="11", fontface="bold")))
+text <- grobTree(textGrob('Points for WCRF/AICR score', gp=gpar(col="#000099", fontsize="10")))
 
 # BMI
 ggplot(table_scores) +
   aes(x = BMI, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x = "BMI (kg/m2)", title = "BMI distribution") +
   geom_vline(xintercept = 25, linetype = "dotted") + geom_vline(xintercept = 18.5, linetype = "dashed") + geom_vline(xintercept = 30, linetype = "dashed") +
-  annotation_custom(rec0, xmax = 18.5, ymin = 250) +
-  annotation_custom(rec0, xmin = 30, ymin = 250) +
-  annotation_custom(rec025, xmin = 25, xmax = 30, ymin = 250) +
-  annotation_custom(rec05, xmin =18.5, xmax = 25, ymin = 250) 
+  annotation_custom(rec0, xmax = 18.5, ymin = 270) +
+  annotation_custom(rec0, xmin = 30, ymin = 270) +
+  annotation_custom(rec025, xmin = 25, xmax = 30, ymin = 270) +
+  annotation_custom(rec05, xmin =18.5, xmax = 25, ymin = 270) +
+  annotation_custom(text, xmin =30, xmax = 55, ymin = 245)
+
+ggplot(table_scores, aes(x = BMI, fill = CT)) +
+  geom_histogram(alpha=0.2, position='identity')
+
 
 ggplot(table_scores) +
   aes(x = BMI, fill = CT) +
@@ -138,86 +201,114 @@ ggplot(table_scores) +
 # Tour de taille
 ggplot(table_scores) +
   aes(x = TTAILLE, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Waist circumference (cm)", title = "Waist circumference distribution") +
   geom_vline(xintercept = 88, linetype = "dashed") + geom_vline(xintercept = 80, linetype = "dashed") +
-  annotation_custom(rec0, xmax = 80, ymin = 200) + 
-  annotation_custom(rec025, xmin =80, xmax = 88, ymin = 200) + 
-  annotation_custom(rec05, xmin =88, ymin = 200) 
+  annotation_custom(rec0, xmax = 80, ymin = 208) + 
+  annotation_custom(rec025, xmin =80, xmax = 88, ymin = 208) + 
+  annotation_custom(rec05, xmin =88, ymin = 208) +
+  annotation_custom(text, xmin =90, xmax = 132, ymin = 170)
 
 # Activite physique
 ggplot(table_scores) +
   aes(x = TotalAPQ3, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Physical activity (MET hours/week)", title = "Physical activity distribution") +
   geom_vline(xintercept = 9.375, linetype = "dashed") + geom_vline(xintercept = 18.75, linetype = "dashed") +
-  annotation_custom(rec0, xmax = 9, ymin = 175) + 
-  annotation_custom(rec05, xmin =9.4, xmax = 18, ymin = 175) + 
-  annotation_custom(rec1, xmin =19, ymin = 175) 
+  annotation_custom(rec0, xmax = 9, ymin = 185) + 
+  annotation_custom(rec05, xmin =9.4, xmax = 18, ymin = 185) + 
+  annotation_custom(rec1, xmin =19, ymin = 185) +
+  annotation_custom(text, xmin =75, xmax = 220, ymin = 150)
 
 # Fruits et legumes
 ggplot(table_scores) +
   aes(x = fruitveg , fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Fruits & vegetables (g/day)", title = "Fruits and vegetables consumption distribution") +
   geom_vline(xintercept = 200, linetype = "dashed") + geom_vline(xintercept = 400, linetype = "dashed") +
-  annotation_custom(rec0, xmax = 200, ymin = 175) + 
-  annotation_custom(rec025, xmin =200, xmax = 400, ymin = 175) + 
-  annotation_custom(rec05, xmin =400, ymin = 175) 
+  annotation_custom(rec0, xmax = 200, ymin = 190) + 
+  annotation_custom(rec025, xmin =200, xmax = 400, ymin = 190) + 
+  annotation_custom(rec05, xmin =400, ymin = 190) +
+  annotation_custom(text, xmin =1000, xmax = 2200, ymin = 160)
 
 # Fibres
 ggplot(table_scores) +
   aes(x = TDF, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Fiber (g/day)", title = "Total fiber consumption distribution") +
   geom_vline(xintercept = 15, linetype = "dashed") + geom_vline(xintercept = 30, linetype = "dashed") +
-  annotation_custom(rec0, xmax = 15, ymin = 175) + 
-  annotation_custom(rec025, xmin =15, xmax = 30, ymin = 175) + 
-  annotation_custom(rec05, xmin =30, ymin = 175) 
+  annotation_custom(rec0, xmax = 15, ymin = 180) + 
+  annotation_custom(rec025, xmin =15, xmax = 30, ymin = 180) + 
+  annotation_custom(rec05, xmin =30, ymin = 180) +
+  annotation_custom(text, xmin =30, xmax = 65, ymin = 150)
 
 # aUPF
 ggplot(table_scores) +
   aes(x = percent_aUPF, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Percentage of aUPF in total food consumption", title = "Percentage of aUPF distribution") +
   geom_vline(xintercept = tertile_UPF1, linetype = "dashed") + geom_vline(xintercept = tertile_UPF2, linetype = "dashed") +
-  annotation_custom(rec0, xmin = tertile_UPF2, ymin = 150) + 
-  annotation_custom(rec05, xmin =tertile_UPF1, xmax = tertile_UPF2, ymin = 150) + 
-  annotation_custom(rec1, xmax =tertile_UPF1, ymin = 150) 
+  annotation_custom(rec0, xmin = tertile_UPF2, ymin = 162) + 
+  annotation_custom(rec05, xmin =tertile_UPF1, xmax = tertile_UPF2, ymin = 162) + 
+  annotation_custom(rec1, xmax =tertile_UPF1, ymin = 162) +
+  annotation_custom(text, xmin = 10, xmax = 27, ymin = 140)
 
-# meat ??
+# Red meat
+ggplot(table_scores) +
+  aes(x = Rmeat, fill = CT) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
+  labs(x ="Red meat consumption (g/week)", title = "Red meat concumption distribution") +
+  geom_vline(xintercept = 500, linetype = "dashed") +
+  annotation_custom(rec0, xmin = 1000, xmax = 1250, ymin = 175) + 
+  annotation_custom(rec05, xmin =0, xmax = 400, ymin = 150) + 
+  annotation_custom(rec1, xmin = 0, xmax = 400, ymin = 175) +
+  annotation_custom(text, xmin = 750, xmax = 1500, ymin = 150)
+
+# Processed meat
+ggplot(table_scores) +
+  aes(x = Pmeat, fill = CT) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
+  labs(x ="Processed meat consumption (g/week)", title = "Processed meat concumption distribution") +
+  geom_vline(xintercept = 21, linetype = "dashed") +geom_vline(xintercept = 100, linetype = "dashed") +
+  annotation_custom(rec0, xmin = 600, xmax = 900, ymin = 190) + 
+  annotation_custom(rec05, xmin = 21, xmax = 100, ymin = 190) + 
+  annotation_custom(rec1, xmax = 10, ymin = 190) +
+  annotation_custom(text, xmin = 500, xmax = 1200, ymin = 160)
 
 # Sugary drinks
 ggplot(table_scores) +
   aes(x = sugary_drinks, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Sugary drinks (g/day)", title = "Sugary drinks consumption distribution") +
   geom_vline(xintercept = 0, linetype = "dashed") + geom_vline(xintercept = 250, linetype = "dashed") +
-  annotation_custom(rec0, xmin = 250, ymin = 600) + 
-  annotation_custom(rec05, xmin =0, xmax = 250, ymin = 600) + 
-  annotation_custom(rec1, xmax =0, ymin = 600)
+  annotation_custom(rec0, xmin = 250, ymin = 620) + 
+  annotation_custom(rec05, xmin =0, xmax = 250, ymin = 620) + 
+  annotation_custom(rec1, xmax =0, ymin = 620) +
+  annotation_custom(text, xmin =300, xmax = 600, ymin = 500)
 
 # Alcohol
 ggplot(table_scores) +
   aes(x =ALCOHOL, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Total ethanol (g/day)", title = "Total ethanol consumption distribution") +
   geom_vline(xintercept = 0, linetype = "dashed") + geom_vline(xintercept = 14, linetype = "dashed") +
-  annotation_custom(rec0, xmin = 14, ymin = 325) + 
-  annotation_custom(rec05, xmin =0, xmax = 14, ymin = 325) + 
-  annotation_custom(rec1, xmax =0, ymin = 325)
+  annotation_custom(rec0, xmin = 14, ymin = 335) + 
+  annotation_custom(rec05, xmin =0, xmax = 14, ymin = 335) + 
+  annotation_custom(rec1, xmax =0, ymin = 335) +
+  annotation_custom(text, xmin =50, xmax = 160, ymin = 300, ymax = 325)
 
 # Allaitement
 ggplot(table_scores) +
   aes(x =allaitement_dureecum, fill = CT) +
-  geom_histogram(position = "dodge", bins = 15) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 15) +
   labs(x ="Breastfeeding (months)", title = "Breastfeeding distribution") +
   geom_vline(xintercept = 0, linetype = "dashed") + geom_vline(xintercept = 6, linetype = "dashed") +
-  annotation_custom(rec0, xmax = 0, ymin = 350) + 
-  annotation_custom(rec05, xmin =0, xmax = 6, ymin = 350) + 
-  annotation_custom(rec1, xmin =6, ymin = 350)
-
+  annotation_custom(rec0, xmax = 0, ymin = 370) + 
+  annotation_custom(rec05, xmin =0, xmax = 6, ymin = 370) + 
+  annotation_custom(rec1, xmin =6, ymin = 370) +
+  annotation_custom(text, xmin =20, xmax = 35, ymin = 330)
 #BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum
+
   
 # Metabolomics dataset ---------------------------------------------------------------------
 
@@ -277,11 +368,11 @@ corlist.BMI <- apply(metabolo[table_scores$BMI > 0, ], 2, simplecor.BMI)
 # Convert to data frame and add compound names, order by correlation
 cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 
-# Plot metabolites distribution --------------------------------------
-normal_distrib <- function (x) {
+# Check metabolites normal distribution --------------------------------------
+normal_distrib_metab <- function (x) {
   qqnorm(metabolo[,x], main =colnames(metabolo)[x])
   qqline(metabolo[,x])
 }
 
 n <- ncol(metabolo)
-for(i in c(1:n)){normal_distrib(i)}
+for(i in c(1:n)){normal_distrib_metab(i)}
