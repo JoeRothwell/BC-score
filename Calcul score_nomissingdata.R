@@ -131,6 +131,8 @@ score_decompCS <- df.scores %>%
   mutate(sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
 summary(score_decompCS)
 
+summary(table_scores)
+
 # Test Student - Score components ----------------------------------------------------------------------
 
 # Checking variables normal distribution
@@ -145,11 +147,9 @@ for(i in c(2:13)){normal_distrib_comp(i)}
 var.test(BMI ~ CT, data = table_scores)
 t.test(BMI ~ CT, data = table_scores)
 
-stud <- function (x) {
-  t.test(matrix_scores[,x] ~ CT, data = matrix_scores)
-}
+student <- function(x) {t.test(matrix_scores[,x] ~ CT, data = matrix_scores)}
+for(i in 2:13){print(student(i))}
 
-stud(14)
 
 ftest <- function (x) {
   var.test(matrix_scores[,x] ~ CT, data = matrix_scores)
