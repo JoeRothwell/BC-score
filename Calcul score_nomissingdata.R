@@ -43,7 +43,7 @@ data_xnames <- scoredata %>%
 data_xnames_sums <- data_xnames %>%
   rowwise() %>%
   mutate (fruitveg = sum(x2, x3, x35, x40, x53), #g/day
-          Rmeat = sum(x46_3, x46_4, x46_6, x46_7, x46_9, x47_2)*7, #g/week
+          Rmeat = sum(x46_3, x46_7, x46_9, x47_2)*7, #g/week
           Pmeat = sum(x19, x36, x37, x41_4, x41_7, x42, x47_6)*7, #g/week
           sugary_drinks = sum(x7, x21), #g/day
           aUPF = sum(x10_4, x10_7, x11_2, x11_3, x11_5, x11_6, x14, x15, x16_3, x16_4, 
@@ -117,6 +117,8 @@ ggplot(table_scores) +
 
 # Ceate a matrix containing score information
 matrix_scores <- data.matrix(table_scores)
+matrixCTR <- table_scores %>% filter (CT == "Controls") %>% select(-CT) %>% data.matrix
+matrixCS <- table_scores %>% filter (CT == "Cases") %>% select(-CT) %>% data.matrix
 
 # Table with score decomposition
 score_decompCTR <- df.scores %>%
@@ -146,16 +148,45 @@ for(i in c(2:13)){normal_distrib_comp(i)}
 # Test F de comparaison et test de Student apparié
 var.test(BMI ~ CT, data = table_scores)
 t.test(BMI ~ CT, data = table_scores)
+var.test(TTAILLE ~ CT, data = table_scores)
+t.test(TTAILLE ~ CT, data = table_scores)
+var.test(TotalAPQ3 ~ CT, data = table_scores)
+t.test(TotalAPQ3 ~ CT, data = table_scores)
+var.test(fruitveg ~ CT, data = table_scores)
+t.test(fruitveg ~ CT, data = table_scores)
+var.test(TDF ~ CT, data = table_scores)
+t.test(TDF ~ CT, data = table_scores)
+var.test(percent_aUPF ~ CT, data = table_scores)
+t.test(percent_aUPF ~ CT, data = table_scores)
+var.test(Rmeat ~ CT, data = table_scores)
+t.test(Rmeat ~ CT, data = table_scores)
+var.test(Pmeat ~ CT, data = table_scores)
+t.test(Pmeat ~ CT, data = table_scores)
+var.test(sugary_drinks ~ CT, data = table_scores)
+t.test(sugary_drinks ~ CT, data = table_scores)
+var.test(ALCOHOL ~ CT, data = table_scores)
+t.test(ALCOHOL ~ CT, data = table_scores)
+var.test(allaitement_dureecum ~ CT, data = table_scores)
+t.test(allaitement_dureecum ~ CT, data = table_scores)
+var.test(score ~ CT, data = table_scores)
+t.test(score ~ CT, data = table_scores)
 
 student <- function(x) {t.test(matrix_scores[,x] ~ CT, data = matrix_scores)}
-for(i in 2:13){print(student(i))}
-
+#for(i in 2:13){print(student(i))}
 
 ftest <- function (x) {
   var.test(matrix_scores[,x] ~ CT, data = matrix_scores)
 }
+#ftest(10)
 
-ftest(10)
+# Standard deviations
+apply(matrixCTR, 2, sd)
+apply(matrixCS, 2, sd)
+
+quantile(table_scores$sugary_drinks, probs = c(1/4, 3/4))
+quantile(table_scores$ALCOHOL, probs = c(1/4, 3/4))
+quantile(table_scores$allaitement_dureecum, probs = c(1/4, 3/4))
+
 
 # Graphs for data distribution ---------------------------------------------------------------------
 
