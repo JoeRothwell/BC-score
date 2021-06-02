@@ -1,0 +1,182 @@
+---
+title: "test pour comprendre fruits et légumes"
+output: html_document
+---
+
+
+```{r}
+library(haven)
+library(tidyverse)
+library(readxl)
+```
+
+
+```{r}
+# Food data
+alim2002 <- read_sas("frjour2002.sas7bdat") %>%
+  mutate(pdt = Grp101,
+         leg_NS = Grp200,
+         leg_feuilles_choux = Grp201,
+         leg_fruits = Grp202,
+         leg_racines = Grp203,
+         choux = Grp204,
+         champi = Grp205,
+         le_graines_pois = Grp206,
+         oignons_ail = Grp207,
+         leg_branches_pousses = Grp208,
+         leg_secs = Grp301,
+         fruits = Grp401,
+         fruits_oleag = Grp402,
+         olives = Grp404,
+         lait = Grp501, bois_lactees = Grp502, yaourt = Grp503, from_blanc = Grp504, from = Grp505, dess_lactes = Grp506, creme = Grp507, pates_riz = Grp602, pain_bisc = Grp603, cereales = Grp604, bois_alc = Grp14, 
+         pdt2 = Grp1, legumes = Grp2, legumes_secs = Grp3, fruits2 = Grp4) %>%
+  rename(ident = IDENT)
+#head(alim2002)
+
+```
+
+```{r}
+# Breastfeeding data
+bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident = IDENT)
+
+# Physical activity data 
+physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT)
+
+# Correspondence ident-COBBMB
+id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% select(c("CODBMB", "ident"))
+
+# Fiber data
+fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
+
+# Metadata
+meta <- read_csv("metadata.csv", na = "9999")
+meta$CODBMB <- as.character(meta$CODBMB)
+
+# Create a single table (containing cases and controls)
+scoredata <- meta %>% 
+  left_join(id, by = "CODBMB") %>% left_join(alim2002, by = "ident") %>%
+  left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
+  left_join(physact, by = "ident")
+```
+
+```{r}
+#Renaming all (food) columns starting with "_" 
+data_xnames <- scoredata %>%
+  rename_at(vars(starts_with('_')), funs(str_replace(., '_', 'x'))) 
+```
+
+```{r}
+#Calculating g/day intake of total fruits & vegetables, red meat, processed meat, drinks, alcohol, aUPF, total food intake and percentage of aUPF in total food intake
+data_xnames_sums <- data_xnames %>%
+  rowwise() %>%
+  mutate (fruitveg = sum(x2, x3, x35, x40, x53), #g/day
+          fruitveg3 = sum(legumes, legumes_secs, fruits2),
+          fruitveg3_sanssec = sum(legumes, fruits2),
+          fruitveg2 = sum(le_graines_pois, leg_NS, leg_feuilles_choux, leg_fruits, leg_racines, leg_branches_pousses, leg_secs),
+          fruitveg2_sanssec = sum(le_graines_pois, leg_NS, leg_feuilles_choux, leg_fruits, leg_racines, leg_branches_pousses),
+          Rmeat = sum(x46_3, x46_4, x46_6, x46_7, x46_9, x47_2), #g/week
+          Pmeat = sum(x19, x36, x37, x41_4, x41_7, x42, x47_6), #g/week
+          sugary_drinks = sum(x7, x21), #g/day
+          alcohol = (sum(x25, x26, x27, x28, x29, x30, x31, x58) - x25_3),
+          aUPF = sum(x10_4, x10_7, x11_2, x11_3, x11_5, x11_6, x14, x15, x16_3, x16_4, 
+                     x16_5, x16_6, x17_4, x17_5, x17_6, x22, x23, x24, x33, x47_1, 
+                     x47_5, x47_8, x50, x54, x55, 
+                     MG2, MG3, MG4, MG12, MG15, Vin1, Vin2), #g/day
+          total_food = 
+            sum(x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, 
+                x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27, x28, 
+                x29, x30, x31, x32, x33, x34, x35, x36, x37, x38, x39, x40, x41, 
+                x42, x43, x44, x45, x46, x47, x48, x49, x50, x51, x52, x53, x54, 
+                x55, x56, x57, x58, x59, 
+                Sucre, Edulc, Lait, Vin, MG0, MG1, MG2, MG3, MG4, MG5, MG6, MG7, MG8, MG9, MG10, MG11, MG12, MG13, MG14, MG15)) %>% #g/day
+  mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
+```
+
+```{r}
+#Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
+clean_data <- data_xnames_sums %>% 
+  filter(!is.na(percent_aUPF) & !is.na(allaitement_dureecum) & !is.na(TTAILLE))
+```
+
+```{r}
+#Tertiles : needed for aUPF consumption cutoff points
+tertiles_UPF <- quantile(clean_data$percent_aUPF, probs = c(1/3, 2/3))
+tertile_UPF1 <- as.numeric(tertiles_UPF[1]) #cut point n°1 (fully-met recommendation)
+tertile_UPF2 <- as.numeric(tertiles_UPF[2]) #cut point n°2 (half-met recommendation)
+```
+
+# Score -----------------------------------------------------------------------
+```{r}
+df.scores <- clean_data %>% 
+  mutate(sc.BMI1 = ifelse(BMI >= 18.5 & BMI < 30, 0.25, 0), # At least 0.25 for this condition
+         sc.BMI2 = ifelse(BMI >= 18.5 & BMI < 25, 0.25, 0), # Another 0.25 for this condition
+         sc.TT1  = ifelse(TTAILLE <= 88, 0.25, 0), 
+         sc.TT2  = ifelse(TTAILLE <= 80, 0.25, 0),
+         sc.PA1  = ifelse(TotalAPQ3 >= 9.375, 0.5, 0), 
+         sc.PA2  = ifelse(TotalAPQ3 >= 18.75, 0.5, 0),
+         sc.FV1 = ifelse(fruitveg >= 200, 0.25, 0),
+         sc.FV2 = ifelse(fruitveg >= 400, 0.25, 0),
+         sc.TDF1 = ifelse(TDF >= 15, 0.25, 0),
+         sc.TDF2 = ifelse(TDF >= 30, 0.25, 0),
+         sc.UPF1 = ifelse(percent_aUPF < tertile_UPF2, 0.5, 0),
+         sc.UPF2 = ifelse(percent_aUPF < tertile_UPF1, 0.5, 0),
+         sc.MEAT1 = ifelse(Rmeat < 500 & Pmeat < 100, 0.5, 0),
+         sc.MEAT2 = ifelse(Rmeat < 500 & Pmeat < 21, 0.5, 0),
+         sc.SD1 = ifelse(sugary_drinks <= 250, 0.5, 0),
+         sc.SD2 = ifelse(sugary_drinks == 0, 0.5, 0),
+         sc.ALC1 = ifelse(alcohol <= 14, 0.5, 0),
+         sc.ALC2 = ifelse(alcohol == 0, 0.5, 0),
+         sc.BFD1 = ifelse(nullipare == 0 & allaitement_dureecum > 0 & allaitement_dureecum < 6, 0.5, 0),
+         sc.BFD2 = ifelse(nullipare == 0 & allaitement_dureecum > 6, 0.5, 0),
+         # Add up sc.BMI + sc.TT + sc.PA + other recommendations to get score         
+         sc.BMI = sc.BMI1 + sc.BMI2, sc.TT = sc.TT1 + sc.TT2, sc.PA = sc.PA1 + sc.PA2,
+         sc.FV = sc.FV1 + sc.FV2, sc.TDF = sc.TDF1 + sc.TDF2, sc.UPF= sc.UPF1 + sc.UPF2, sc.MEAT = sc.MEAT1 + sc.MEAT2,
+         sc.SD = sc.SD1 + sc.SD2, sc.ALC = sc.ALC1 + sc.ALC2,
+         sc.BFD = sc.BFD1 + sc.BFD2,
+         # Get overall score
+         score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD)
+```
+
+
+```{r}
+hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"))
+```
+
+
+```{r}
+# Create a table containing only data relevant for the score
+table_scores <- df.scores %>%
+  select(CODBMB, CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcohol, nullipare, allaitement_dureecum, sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
+head(table_scores)
+```
+
+```{r}
+# Score components and score mutated as factors
+table_scoresFCT <- table_scores %>%
+  mutate(CT = as.factor(CT), sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
+head(table_scoresFCT)
+```
+
+
+```{r}
+#Creating a table containing only score information
+all_scores <- table_scoresFCT %>%
+  select(sc.BMI, sc.TT, sc.PA,  sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score)
+#head(all_scores)
+summary(all_scores)
+```
+
+
+```{r}
+table_fruitveg <- df.scores %>%
+  select (ident, CT, x2, x3, x35, x40, x53, fruitveg, fruitveg2, fruitveg3, fruitveg2_sanssec, fruitveg3_sanssec) %>%
+  mutate (fruitveg_semaine = fruitveg*7)
+#head(table_fruitveg)
+summary(table_fruitveg)
+
+# fruitveg = sum(x2, x3, x35, x40, x53)/7, #g/day
+# fruitveg2 = sum(le_graines_pois, leg_NS, leg_feuilles_choux, leg_fruits, leg_racines, leg_branches_pousses, leg_secs),
+# fruitveg2_sanssec = sum(le_graines_pois, leg_NS, leg_feuilles_choux, leg_fruits, leg_racines, leg_branches_pousses)
+# fruitveg3 = sum(legumes, legumes_secs, fruits2),
+# fruitveg3_sanssec = sum(legumes, fruits2),
+```
