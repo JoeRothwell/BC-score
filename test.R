@@ -1,3 +1,5 @@
+#ulhgkt'j:hf
+
 # Score components' table as factors
 table_scores2 <- df.scores %>%
   select(CT, sc.BMI,  sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
