@@ -42,7 +42,7 @@ data_xnames <- scoredata %>%
 # g/day intake of total fruits & vegetables, red meat, processed meat, sugary drinks, aUPF, total food intake and percentage of aUPF in total food intake
 data_xnames_sums <- data_xnames %>%
   rowwise() %>%
-  mutate (fruitveg = sum(x2, x3, x35, x40, x53), #g/day
+  mutate (fruitveg = sum(x2, x3, x35, x40, x41_2, x41_5, x41_11, x53), #g/day
           Rmeat = sum(x46_3, x46_7, x46_9, x47_2)*7, #g/week
           Pmeat = sum(x19, x36, x37, x41_4, x41_7, x42, x47_6)*7, #g/week
           sugary_drinks = sum(x7, x21), #g/day
@@ -148,7 +148,6 @@ normal_distrib_comp <- function (x) {
   qqnorm(matrix_scores[,x], main =colnames(matrix_scores)[x])
   qqline(matrix_scores[,x])
 }
-
 for(i in c(2:13)){normal_distrib_comp(i)}
 
 # Test F de comparaison et test de Student apparié
@@ -351,6 +350,7 @@ for(i in c(1:n)){normal_distrib_metab(i)}
 
 
 # WCRF/AICR full score simple correlations with metabolites ---------------------------------------------------------------------
+library("writexl")
 
 # Simple correlation for WCRF score - Spearman correlation
 simplecorSP <- function(x) cor.test(table_scores$score[table_scores$score > 0], x, method = "spearman")
@@ -359,7 +359,7 @@ corlistSP <- apply(metabolo[table_scores$score > 0, ], 2, simplecorSP)
 # Convert to data frame and add compound names, order by correlation
 library(broom)
 cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-cordatSP
+write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\spearman_score_and_metabolites.xlsx") 
 
 
 # Simple correlation for WCRF score - Pearsons correlation
@@ -368,7 +368,8 @@ corlistPE <- apply(metabolo[table_scores$score > 0, ], 2, simplecorPE)
 
 # Convert to data frame and add compound names, order by correlation
 cordatPE <- map_dfr(corlistPE, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-cordatPE
+write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\pearson_score_and_metabolites.xlsx") 
+
 
 # Plot correlations
 plotSP <- ggplot(cordatSP, aes(method, compound)) +
