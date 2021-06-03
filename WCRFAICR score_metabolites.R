@@ -107,7 +107,7 @@ df.scores <- clean_data %>%
 
 # Table containing only data relevant for the score and full score
 table_scores <- df.scores %>%
-  select(CT, BMI,  TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
+  select(CT, BMI, TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
   mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
 
 # Matrix containing score information
@@ -139,7 +139,6 @@ ggplot(table_scores) +
   aes(x = score, fill = CT, xmin = 2, xmax =8) +
   geom_histogram(alpha = 0.5, position = "identity", bins = 22) +
   labs(x = "WCRF/AICR score", title = "WCRF/AICR scores in the E3N cancer group") 
-
 
 # Test Student for score components ----------------------------------------------------------------------
 
@@ -373,11 +372,13 @@ write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\pearson_score_and_metabolites.
 
 # Plot correlations
 plotSP <- ggplot(cordatSP, aes(method, compound)) +
-  geom_tile(aes(fill = estimate))
+  geom_tile(aes(fill = estimate)) +
+  scale_fill_gradient2() + labs(title = 'corrélation Spearman simple score WCRF - métabolites')
 plotSP
 
 plotPE <- ggplot(cordatPE, aes(method, compound)) +
-  geom_tile(aes(fill = estimate))
+  geom_tile(aes(fill = estimate)) +
+  scale_fill_gradient2() + labs(title = 'corrélation Pearson simple score WCRF - métabolites')
 plotPE
 
 # Individual score components simple correlations---------------------------------------------------------------------
