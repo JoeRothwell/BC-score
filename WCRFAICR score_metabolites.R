@@ -352,8 +352,8 @@ for(i in c(1:n)){normal_distrib_metab(i)}
 library("writexl")
 
 # Simple correlation for WCRF score - Spearman correlation
-simplecorSP <- function(x) cor.test(table_scores$score[table_scores$score > 0], x, method = "spearman")
-corlistSP <- apply(metabolo[table_scores$score > 0, ], 2, simplecorSP)
+simplecorSP <- function(x) cor.test(table_scores$score, x, method = "spearman")
+corlistSP <- apply(metabolo, 2, simplecorSP)
 
 # Convert to data frame and add compound names, order by correlation
 library(broom)
@@ -362,8 +362,8 @@ write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\spearman_score_and_metabolites
 
 
 # Simple correlation for WCRF score - Pearsons correlation
-simplecorPE <- function(x) cor.test(table_scores$score[table_scores$score > 0], x, method = "pearson")
-corlistPE <- apply(metabolo[table_scores$score > 0, ], 2, simplecorPE)
+simplecorPE <- function(x) cor.test(table_scores$score, x, method = "pearson")
+corlistPE <- apply(metabolo, 2, simplecorPE)
 
 # Convert to data frame and add compound names, order by correlation
 cordatPE <- map_dfr(corlistPE, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
@@ -381,6 +381,31 @@ plotPE <- ggplot(cordatPE, aes(method, compound)) +
   scale_fill_gradient2() + labs(title = 'corrélation Pearson simple score WCRF - métabolites')
 plotPE
 
+# WCRF/AICR full score partial correlations with metabolites ---------------------------------------------------------
+
+#Partial correlation controlling for Fasting and smoking status
+partialcor <- function(x) {
+  
+  # Linear model of food intake and confounders
+  mod1 <- lm(score ~ FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+  
+  # Linear model of metabolites and confounders
+  mod2 <- lm(x ~ FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+  
+  # Correlate the two sets of residuals              
+  cor.test(residuals(mod1), residuals(mod2), method = "spearman")
+  
+}
+
+pcorlist <- apply(metabolo, 2, partialcor)
+pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+head(pcordat)
+
+plot_pcor <- ggplot(pcordat, aes(method, compound)) +
+  geom_tile(aes(fill = estimate)) +
+  scale_fill_gradient2() + labs(title = 'Partial correlation - Fasting and Smoking status')
+plot_pcor
+
 # Individual score components simple correlations---------------------------------------------------------------------
 
 # Simple correlation for ALCOHOL
@@ -394,5 +419,4 @@ simplecor.BMI <- function(x) cor.test(table_scores$BMI[table_scores$BMI > 0], x,
 corlist.BMI <- apply(metabolo[table_scores$BMI > 0, ], 2, simplecor.BMI)
 # Convert to data frame and add compound names, order by correlation
 cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-
 
