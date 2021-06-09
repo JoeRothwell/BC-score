@@ -358,7 +358,7 @@ corlistSP <- apply(metabolo, 2, simplecorSP)
 # Convert to data frame and add compound names, order by correlation
 library(broom)
 cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\spearman_score_and_metabolites.xlsx") 
+write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\results_data_tables\\spearman_score_and_metabolites.xlsx") 
 
 
 # Simple correlation for WCRF score - Pearsons correlation
@@ -367,7 +367,7 @@ corlistPE <- apply(metabolo, 2, simplecorPE)
 
 # Convert to data frame and add compound names, order by correlation
 cordatPE <- map_dfr(corlistPE, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\pearson_score_and_metabolites.xlsx") 
+write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\results_data_tables\\pearson_score_and_metabolites.xlsx") 
 
 
 # Plot correlations
@@ -383,14 +383,23 @@ plotPE
 
 # WCRF/AICR full score partial correlations with metabolites ---------------------------------------------------------
 
+# Mutating variables as factor for partial correlations
+df.scores$FASTING <- as.factor(df.scores$FASTING) #fasting status befor blood collection
+df.scores$MENOPAUSE <- as.factor(df.scores$MENOPAUSE) #menopausal status
+df.scores$SMK <- as.factor(df.scores$SMK) #smoking status
+df.scores$DIAGSAMPLINGCat3 <- as.factor(df.scores$DIAGSAMPLINGCat3) #time between blood collection and diagnosis
+df.scores$CO <- as.factor(df.scores$CO) #oral contraceptives
+df.scores$total_food <- as.factor(df.scores$total_food) #total non-alcoholic energy intake
+#df.scores$ <- as.factor(df.scores$)
+
 #Partial correlation controlling for Fasting and smoking status
 partialcor <- function(x) {
   
   # Linear model of food intake and confounders
-  mod1 <- lm(score ~ FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(score ~  SMK + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
   
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ SMK + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
   
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
@@ -399,7 +408,8 @@ partialcor <- function(x) {
 
 pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-head(pcordat)
+write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr_diagsamp_smk.xlsx") 
+
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
