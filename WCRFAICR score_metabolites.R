@@ -412,16 +412,6 @@ pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr_time-menop-co-fast.xlsx") 
 
-#__ 
-moda <- lm(score ~ DIAGSAMPLINGCat3 + MENOPAUSE + CO + FASTING + SMK, data = df.scores[df.scores$score > 0, ])
-modb <- lm(metabolo[,19] ~  MENOPAUSE + CO + FASTING + SMK + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
-summary(moda)
-summary(modb)
-anova(moda)
-anova(modb)
-
-#__
-
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() + labs(title = 'Partial correlation - Fasting and Smoking status')
