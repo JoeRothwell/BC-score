@@ -14,6 +14,8 @@ bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident 
 
 # Physical activity data 
 physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT)
+gm <- read_sas("anthropoq1q9_1.sas7bdat")
+view(gm)
 
 # Correspondence ident-COBBMB
 id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% select(c("CODBMB", "ident"))
@@ -206,6 +208,7 @@ ggplot(table_scores) +
   annotation_custom(rec05, xmin =18.5, xmax = 25, ymin = 270) +
   annotation_custom(text, xmin =30, xmax = 55, ymin = 245)
 
+# Expand to see code for the graphs of the all the other score variables
 ggplot(table_scores, aes(x = BMI, fill = CT)) +
   geom_histogram(alpha=0.2, position='identity')
 
@@ -325,7 +328,6 @@ ggplot(table_scores) +
   annotation_custom(rec05, xmin =0, xmax = 6, ymin = 370) + 
   annotation_custom(rec1, xmin =6, ymin = 370) +
   annotation_custom(text, xmin =20, xmax = 35, ymin = 330)
-
   
 # Metabolomics dataset ---------------------------------------------------------------------
 
@@ -395,11 +397,11 @@ df.scores$total_food <- as.factor(df.scores$total_food) #total non-alcoholic ene
 #Partial correlation controlling for Fasting and smoking status
 partialcor <- function(x) {
   
-  # Linear model of food intake and confounders
-  mod1 <- lm(score ~  SMK + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
+  # Linear model of score and confounders
+  mod1 <- lm(score ~ DIAGSAMPLINGCat3 + MENOPAUSE + CO + FASTING + SMK, data = df.scores[df.scores$score > 0, ])
   
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ SMK + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ DIAGSAMPLINGCat3 + MENOPAUSE + CO + FASTING + SMK, data = df.scores[df.scores$score > 0, ])
   
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
@@ -408,8 +410,17 @@ partialcor <- function(x) {
 
 pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr_diagsamp_smk.xlsx") 
+write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr_time-menop-co-fast.xlsx") 
 
+#__ 
+moda <- lm(score ~ DIAGSAMPLINGCat3 + MENOPAUSE + CO + FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+modb <- lm(metabolo[,19] ~  MENOPAUSE + CO + FASTING + SMK + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
+summary(moda)
+summary(modb)
+anova(moda)
+anova(modb)
+
+#__
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
