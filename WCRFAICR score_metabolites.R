@@ -431,3 +431,4 @@ corlist.BMI <- apply(metabolo[table_scores$BMI > 0, ], 2, simplecor.BMI)
 # Convert to data frame and add compound names, order by correlation
 cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 
+#test
