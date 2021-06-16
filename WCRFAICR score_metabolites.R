@@ -3,6 +3,8 @@ library(haven)
 library(tidyverse)
 library(readxl)
 library(grid)
+library(writexl)
+library(broom)
 
 # Datasets-----------------------------------------------------------------------
 
@@ -15,7 +17,7 @@ bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident 
 # Physical activity data 
 physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT)
 gm <- read_sas("anthropoq1q9_1.sas7bdat")
-view(gm)
+#view(gm)
 
 # Correspondence ident-COBBMB
 id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% select(c("CODBMB", "ident"))
@@ -351,14 +353,13 @@ for(i in c(1:n)){normal_distrib_metab(i)}
 
 
 # WCRF/AICR full score simple correlations with metabolites ---------------------------------------------------------------------
-library("writexl")
+
 
 # Simple correlation for WCRF score - Spearman correlation
 simplecorSP <- function(x) cor.test(table_scores$score, x, method = "spearman")
 corlistSP <- apply(metabolo, 2, simplecorSP)
 
 # Convert to data frame and add compound names, order by correlation
-library(broom)
 cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\results_data_tables\\spearman_score_and_metabolites.xlsx") 
 
@@ -398,10 +399,10 @@ df.scores$total_food <- as.factor(df.scores$total_food) #total non-alcoholic ene
 partialcor <- function(x) {
   
   # Linear model of score and confounders
-  mod1 <- lm(score ~ DIAGSAMPLINGCat3 + MENOPAUSE + CO + FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(score ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
   
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ DIAGSAMPLINGCat3 + MENOPAUSE + CO + FASTING + SMK, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
   
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
@@ -410,11 +411,12 @@ partialcor <- function(x) {
 
 pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr_time-menop-co-fast.xlsx") 
+#write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time.xlsx") 
+#write_xlsx(pcordat, "Users/MacSuzanne/score/results_data_tables/partial_corr-time.xlsx") 
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() + labs(title = 'Partial correlation - Fasting and Smoking status')
+  scale_fill_gradient2() + labs(title = 'Time-Smk-Menop')
 plot_pcor
 
 # Individual score components simple correlations---------------------------------------------------------------------
