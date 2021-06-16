@@ -392,17 +392,17 @@ df.scores$MENOPAUSE <- as.factor(df.scores$MENOPAUSE) #menopausal status
 df.scores$SMK <- as.factor(df.scores$SMK) #smoking status
 df.scores$DIAGSAMPLINGCat3 <- as.factor(df.scores$DIAGSAMPLINGCat3) #time between blood collection and diagnosis
 df.scores$CO <- as.factor(df.scores$CO) #oral contraceptives
-df.scores$total_food <- as.factor(df.scores$total_food) #total non-alcoholic energy intake
+df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy intake
 #df.scores$ <- as.factor(df.scores$)
 
 #Partial correlation controlling for Fasting and smoking status
 partialcor <- function(x) {
   
   # Linear model of score and confounders
-  mod1 <- lm(score ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(score ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3 + CO + DIABETE, data = df.scores[df.scores$score > 0, ])
   
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
   
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
@@ -411,8 +411,9 @@ partialcor <- function(x) {
 
 pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-#write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time.xlsx") 
+write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time-smk-menop_newcovar_metab.xlsx") 
 #write_xlsx(pcordat, "Users/MacSuzanne/score/results_data_tables/partial_corr-time.xlsx") 
+
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
@@ -433,4 +434,8 @@ corlist.BMI <- apply(metabolo[table_scores$BMI > 0, ], 2, simplecor.BMI)
 # Convert to data frame and add compound names, order by correlation
 cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 
-#test
+# Modeles score-breast cancer ---------------------------------------------------------------------
+library(survival)
+
+# All participants
+mod1 <- clogit(CT ~ score + strata(MATCH), data = metabolo)
