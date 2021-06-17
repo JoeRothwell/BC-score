@@ -14,8 +14,6 @@ bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident 
 
 # Physical activity data 
 physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT)
-gm <- read_sas("anthropoq1q9_1.sas7bdat")
-#view(gm)
 
 # Correspondence ident-COBBMB
 id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% select(c("CODBMB", "ident"))
@@ -76,7 +74,7 @@ tertile_UPF2 <- as.numeric(tertiles_UPF[2]) #cut point n°2 (half-met recommenda
 
 # Calculate score -----------------------------------------------------------------------
 
-df.scores <- clean_data %>% 
+df.scores0 <- clean_data %>% 
   mutate(sc.BMI1 = ifelse(BMI >= 18.5 & BMI < 30, 0.25, 0), # At least 0.25 for this condition
          sc.BMI2 = ifelse(BMI >= 18.5 & BMI < 25, 0.25, 0), # Another 0.25 for this condition
          sc.TT1  = ifelse(TTAILLE <= 88, 0.25, 0), 
@@ -103,7 +101,22 @@ df.scores <- clean_data %>%
          sc.SD = sc.SD1 + sc.SD2, sc.ALC = sc.ALC1 + sc.ALC2,
          sc.BFD = sc.BFD1 + sc.BFD2,
          # Get overall score
-         score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD)
+         score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD,
+         # Score by categories (1pt: scor<4, 2pts: 4 < score < 6, 3pts: score > 6) 
+         score_cat1 = ifelse(score >= 6, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score > 2, 1, 0),
+         score_cat = score_cat1 + score_cat2 + score_cat3) 
+
+# Score by quartiles
+quartiles_score <- quantile(df.scores$score, probs = c(1/4, 2/4, 3/4))
+quartiles_score1 <- as.numeric(quartiles_score[1]) 
+quartiles_score2 <- as.numeric(quartiles_score[2])
+quartiles_score3 <- as.numeric(quartiles_score[3]) 
+
+df.scores <- df.scores0 %>%
+  mutate(score_quart1 = ifelse(score >= quartiles_score3, 1, 0), 
+         score_quart2 = ifelse(score >= quartiles_score2, 1, 0), 
+         score_quart3 = ifelse(score >= quartiles_score1, 1, 0),
+         score_quart = score_quart1 + score_quart2 + score_quart3)
 
 # Tables with score info -----------------------------------------------------------------------
 
@@ -130,6 +143,11 @@ score_decompCS <- df.scores %>%
   mutate(sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
 #summary(score_decompCS)
 
+
+# For subsetting ---------------------------------------------------------------------
+# by menopausal status
+pre <- df.scores$MENOPAUSE == 0
+post <- df.scores$MENOPAUSE == 1
 
 # Metabolomics dataset ---------------------------------------------------------------------
 
