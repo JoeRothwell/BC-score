@@ -7,4 +7,7 @@ library(survival)
 # Modeles score-breast cancer ---------------------------------------------------------------------
 
 # All participants
-mod1 <- clogit(CT ~ score + strata(MATCH), data = metabolo)
+mod1 <- clogit(CT ~ score + strata(MATCH), data = df.scores)
+mod1
+
+
