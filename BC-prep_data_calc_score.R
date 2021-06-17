@@ -33,17 +33,6 @@ scoredata <- meta %>%
   left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
   left_join(physact, by = "ident")
 
-# Metabolomics dataset ---------------------------------------------------------------------
-
-# Get metabolomics data (unscaled)
-ints <- read_tsv("1510_XMetaboliteE3N_cpmg_unscaled.txt") #contains the whole group
-ints_clean <- ints[-rows_missing_data,] #remove rows where data was missing for the score
-#ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
-#ints.cases <- ints[meta$CT == 1, ] #contains only the cases
-
-# Scale to unit variance
-metabolo <- scale(ints_clean)
-
 
 # Manipulating data for score -----------------------------------------------------------------------
 
@@ -142,3 +131,13 @@ score_decompCS <- df.scores %>%
 #summary(score_decompCS)
 
 
+# Metabolomics dataset ---------------------------------------------------------------------
+
+# Get metabolomics data (unscaled)
+ints <- read_tsv("1510_XMetaboliteE3N_cpmg_unscaled.txt") #contains the whole group
+ints_clean <- ints[-rows_missing_data,] #remove rows where data was missing for the score
+#ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
+#ints.cases <- ints[meta$CT == 1, ] #contains only the cases
+
+# Scale to unit variance
+metabolo <- scale(ints_clean)
