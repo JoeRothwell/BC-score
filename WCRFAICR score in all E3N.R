@@ -16,12 +16,18 @@ physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT)
 # Fiber data
 fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)  
 
+# BMI and waist size data
+size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcbmb, imcq3, ttaillebmb, ttailleq4, thanchebmb, taille, poidsbmb, agebmb)
+#sizeall <- read_sas("anthropoq1q9_1.sas7bdat")
+#les variables imcbmb et ttaillebmb correspondent a celles de metadata pour l'etude cas temoin mais masse de donnees manquent
+# choix d'utiliser imcq3 car questionnaire alim = q3
+# choix d'utiliser ttailleq4 car variable la plus proche de q3
+
 # Create a single table (containing both cases and controls)
 scoredata_all <-  alim %>%
-  left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
+  left_join(size, by = "ident") %>% left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
   left_join(physact, by = "ident")
-dim(scoredata_all)
-
+#dim(scoredata_all) # 74 552 rows 
 
 # Manipulating data for score -----------------------------------------------------------------------
 
@@ -52,28 +58,21 @@ data_xnames_sums_all <- data_xnames_all %>%
 
 #Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
 # Checking if/where data is missing
+length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
+length(which(is.na(data_xnames_sums_all$imcbmb))) #52 853 mising
+length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
+length(which(is.na(data_xnames_sums_all$ttaillebmb))) #52 863 missing
 
-#BMI : data missing 
-#TTAILLE : data missing
-#TotalAPQ3
 which(is.na(data_xnames_sums_all$TotalAPQ3)) #nothing missing
-#fruitveg
 which(is.na(data_xnames_sums_all$fruitveg)) #nothing missing
-#TDF
 which(is.na(data_xnames_sums_all$TDF)) #nothing missing
-#percent_aUPF
 which(is.na(data_xnames_sums_all$percent_aUPF)) #nothing missing
-#Rmeat
 which(is.na(data_xnames_sums_all$Rmeat)) #nothing missing
-#Pmeat
 which(is.na(data_xnames_sums_all$Pmeat)) #nothing missing
-#sugary_drinks
 which(is.na(data_xnames_sums_all$sugary_drinks)) #nothing missing
-#ALCOHOL 
 which(is.na(data_xnames_sums_all$alcool)) #nothing missing
-#allaitement_dureecum
-data_allaitement <- which(is.na(data_xnames_sums_all$allaitement_dureecum))
-length(data_allaitement) #3336 rows with missing breastfeeding data
+
+length(data_allaitement <- which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
 
 clean_data_all <- data_xnames_sums_all %>% filter(!is.na(allaitement_dureecum))
 dim(clean_data_all)
@@ -87,10 +86,10 @@ tertile_UPF2 <- as.numeric(tertiles_UPF[2]) #cut point n°2 (half-met recommenda
 # Calculate score -----------------------------------------------------------------------
 
 df.scores_all <- clean_data_all %>% 
-  mutate(#sc.BMI1 = ifelse(BMI >= 18.5 & BMI < 30, 0.25, 0), # At least 0.25 for this condition
-         #sc.BMI2 = ifelse(BMI >= 18.5 & BMI < 25, 0.25, 0), # Another 0.25 for this condition
-         #sc.TT1  = ifelse(TTAILLE <= 88, 0.25, 0), 
-         #sc.TT2  = ifelse(TTAILLE <= 80, 0.25, 0),
+  mutate(sc.BMI1 = ifelse(imcq3 >= 18.5 & imcq3 < 30, 0.25, 0), # At least 0.25 for this condition
+         sc.BMI2 = ifelse(imcq3 >= 18.5 & imcq3 < 25, 0.25, 0), # Another 0.25 for this condition
+         sc.TT1  = ifelse(ttailleq4 <= 88, 0.25, 0), 
+         sc.TT2  = ifelse(ttailleq4 <= 80, 0.25, 0),
          sc.PA1  = ifelse(TotalAPQ3 >= 9.375, 0.5, 0), 
          sc.PA2  = ifelse(TotalAPQ3 >= 18.75, 0.5, 0),
          sc.FV1 = ifelse(fruitveg >= 200, 0.25, 0),
@@ -108,19 +107,19 @@ df.scores_all <- clean_data_all %>%
          sc.BFD1 = ifelse(allaitement_dureecum > 0, 0.5, 0),
          sc.BFD2 = ifelse(allaitement_dureecum >= 6, 0.5, 0),
          # Add up sc.BMI + sc.TT + sc.PA + other recommendations to get score         
-         #sc.BMI = sc.BMI1 + sc.BMI2, sc.TT = sc.TT1 + sc.TT2, 
+         sc.BMI = sc.BMI1 + sc.BMI2, sc.TT = sc.TT1 + sc.TT2, 
          sc.PA = sc.PA1 + sc.PA2,
          sc.FV = sc.FV1 + sc.FV2, sc.TDF = sc.TDF1 + sc.TDF2, sc.UPF= sc.UPF1 + sc.UPF2, sc.MEAT = sc.MEAT1 + sc.MEAT2,
          sc.SD = sc.SD1 + sc.SD2, sc.ALC = sc.ALC1 + sc.ALC2,
          sc.BFD = sc.BFD1 + sc.BFD2,
          # Get overall score
-         score =  sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD) #sc.BMI + sc.TT removed
+         score =  sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD)
 
 # Tables with score info -----------------------------------------------------------------------
 
 # Table containing only data relevant for the score and full score
 table_scores_all <- df.scores_all %>%
-  select(CT, BMI, TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
+  select(CT, imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
   mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
 
 
