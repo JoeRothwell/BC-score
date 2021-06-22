@@ -118,6 +118,11 @@ df.scores_all <- clean_data_all %>%
 table_scores_all <- df.scores_all %>%
   select(imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcool, allaitement_dureecum, score)
 
+# Table containing only sccore components
+table_components_all <- df.scores_all %>%
+  select(imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcool, allaitement_dureecum) %>%
+  rename (BMI=imcq3, Waist_circ.=ttailleq4, Physical_activity=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
+          aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=alcool, Breastfeeding=allaitement_dureecum)
 
 # Score histograms -----------------------------------------------------------------------
 
@@ -127,7 +132,12 @@ hist(df.scores_all$score, xlab = "WCRF/AICR score", main = paste("Scores in the 
 summary(df.scores_all$score)
 
 # Score distribution histogram, colors according to status case VS control
+# need to find variabe indicating breast cancer
 ggplot(table_scores_all) +
   aes(x = score, fill = CT, xmin = 2, xmax =8) +
   geom_histogram(alpha = 0.5, position = "identity", bins = 22) +
   labs(x = "WCRF/AICR score", title = "WCRF/AICR scores in the E3N cancer group") 
+
+# Score components correlations---------------------------------------------------------------------
+tabcor_all <- cor(table_components_all)
+corrplot(tabcor_all, tl.col = "black", type = "upper", title = "Score components correlations-E3N cohort")
