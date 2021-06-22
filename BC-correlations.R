@@ -92,10 +92,6 @@ cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metab
 
 
 # Score components correlations---------------------------------------------------------------------
-comp.corr1 <- function(x) cor.test(table_scores$score, x, method = "spearman")
-corlistSP <- apply(metabolo, 2, simplecorSP)
-
-pairs(table_scores)
 mcor <- cor(table_scores, use = "complete.obs")
 tabcor <- cor(table_components)
-corrplot(tabcor, tl.col = "black", type = "upper")
+corrplot(tabcor, tl.col = "black", type = "upper",  title = "Score components correlations-case control study")
