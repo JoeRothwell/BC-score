@@ -11,7 +11,7 @@ alim <- read_sas("frjour.sas7bdat")
 bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident = IDENT)
 
 # Physical activity data 
-physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT)  
+physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT) %>% select(ident, TotalAPQ3)  
 
 # Fiber data
 fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)  
@@ -56,32 +56,29 @@ data_xnames_sums_all <- data_xnames_all %>%
                 SUCRE, EDULC, LAIT, VIN, MG)) %>% #g/day
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
 
-#Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
+# Cleaning missing data in percentage of BMI, waist circumference and breastfeeding 
+# No missing data for food components since all the tables were linked to the alim table
 # Checking if/where data is missing
 length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
-length(which(is.na(data_xnames_sums_all$imcbmb))) #52 853 mising
 length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
-length(which(is.na(data_xnames_sums_all$ttaillebmb))) #52 863 missing
+length(which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
 
-which(is.na(data_xnames_sums_all$TotalAPQ3)) #nothing missing
-which(is.na(data_xnames_sums_all$fruitveg)) #nothing missing
-which(is.na(data_xnames_sums_all$TDF)) #nothing missing
-which(is.na(data_xnames_sums_all$percent_aUPF)) #nothing missing
-which(is.na(data_xnames_sums_all$Rmeat)) #nothing missing
-which(is.na(data_xnames_sums_all$Pmeat)) #nothing missing
-which(is.na(data_xnames_sums_all$sugary_drinks)) #nothing missing
-which(is.na(data_xnames_sums_all$alcool)) #nothing missing
+clean_data_all1 <- data_xnames_sums_all %>% filter(!is.na(ttailleq4))
+dim(clean_data_all1) # 63 863 rows
 
-length(data_allaitement <- which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
+length(which(is.na(clean_data_all1$imcq3))) #2 920 missing
+clean_data_all2 <- clean_data_all1 %>% filter(!is.na(imcq3))
+dim(clean_data_all2) # 60 943 rows
 
-clean_data_all <- data_xnames_sums_all %>% filter(!is.na(allaitement_dureecum))
+length(which(is.na(clean_data_all2$allaitement_dureecum))) # 1 675 missing
+clean_data_all <- clean_data_all2 %>% filter(!is.na(allaitement_dureecum))
 dim(clean_data_all)
-# 71186 rows remaining
-                                                  
+# 59 268 rows remaining 
+
 #Tertiles : needed for aUPF consumption cutoff points
-tertiles_UPF <- quantile(clean_data_all$percent_aUPF, probs = c(1/3, 2/3))
-tertile_UPF1 <- as.numeric(tertiles_UPF[1]) #cut point n°1 (fully-met recommendation)
-tertile_UPF2 <- as.numeric(tertiles_UPF[2]) #cut point n°2 (half-met recommendation)
+tertiles_UPF_all <- quantile(clean_data_all$percent_aUPF, probs = c(1/3, 2/3))
+tertile_UPF1_all <- as.numeric(tertiles_UPF_all[1]) #cut point n°1 (fully-met recommendation)
+tertile_UPF2_all <- as.numeric(tertiles_UPF_all[2]) #cut point n°2 (half-met recommendation)
 
 # Calculate score -----------------------------------------------------------------------
 
@@ -119,8 +116,7 @@ df.scores_all <- clean_data_all %>%
 
 # Table containing only data relevant for the score and full score
 table_scores_all <- df.scores_all %>%
-  select(CT, imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
-  mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
+  select(imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcool, allaitement_dureecum, score)
 
 
 # Score histograms -----------------------------------------------------------------------
