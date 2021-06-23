@@ -1,6 +1,7 @@
 library(ggplot2)
 library(haven)
 library(tidyverse)
+library(corrplot)
 
 # Datasets-----------------------------------------------------------------------
 
@@ -18,10 +19,6 @@ fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
 
 # BMI and waist size data
 size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcbmb, imcq3, ttaillebmb, ttailleq4, thanchebmb, taille, poidsbmb, agebmb)
-#sizeall <- read_sas("anthropoq1q9_1.sas7bdat")
-#les variables imcbmb et ttaillebmb correspondent a celles de metadata pour l'etude cas temoin mais masse de donnees manquent
-# choix d'utiliser imcq3 car questionnaire alim = q3
-# choix d'utiliser ttailleq4 car variable la plus proche de q3
 
 # Create a single table (containing both cases and controls)
 scoredata_all <-  alim %>%
@@ -72,7 +69,7 @@ dim(clean_data_all2) # 60 943 rows
 
 length(which(is.na(clean_data_all2$allaitement_dureecum))) # 1 675 missing
 clean_data_all <- clean_data_all2 %>% filter(!is.na(allaitement_dureecum))
-dim(clean_data_all)
+#dim(clean_data_all)
 # 59 268 rows remaining 
 
 #Tertiles : needed for aUPF consumption cutoff points
@@ -93,8 +90,8 @@ df.scores_all <- clean_data_all %>%
          sc.FV2 = ifelse(fruitveg >= 400, 0.25, 0),
          sc.TDF1 = ifelse(TDF >= 15, 0.25, 0),
          sc.TDF2 = ifelse(TDF >= 30, 0.25, 0),
-         sc.UPF1 = ifelse(percent_aUPF < tertile_UPF2, 0.5, 0),
-         sc.UPF2 = ifelse(percent_aUPF < tertile_UPF1, 0.5, 0),
+         sc.UPF1 = ifelse(percent_aUPF < tertile_UPF2_all, 0.5, 0),
+         sc.UPF2 = ifelse(percent_aUPF < tertile_UPF1_all, 0.5, 0),
          sc.MEAT1 = ifelse(Rmeat < 500 & Pmeat < 100, 0.5, 0),
          sc.MEAT2 = ifelse(Rmeat < 500 & Pmeat < 21, 0.5, 0),
          sc.SD1 = ifelse(sugary_drinks <= 250, 0.5, 0),
@@ -118,18 +115,23 @@ df.scores_all <- clean_data_all %>%
 table_scores_all <- df.scores_all %>%
   select(imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcool, allaitement_dureecum, score)
 
-# Table containing only sccore components
+# Table containing only score components
 table_components_all <- df.scores_all %>%
   select(imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcool, allaitement_dureecum) %>%
-  rename (BMI=imcq3, Waist_circ.=ttailleq4, Physical_activity=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
+  rename(BMI=imcq3, Waist_circ=ttailleq4, Physical_act=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
           aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=alcool, Breastfeeding=allaitement_dureecum)
+
+# Table to look at the score components' distribution
+table_components_all_factors <- df.scores_all %>%
+  select(sc.BMI, sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
+  mutate(sc.BMI=factor(sc.BMI), sc.TT=factor(sc.TT), sc.PA=factor(sc.PA), sc.FV=factor(sc.FV), sc.TDF=factor(sc.TDF), 
+         sc.UPF=factor(sc.UPF), sc.MEAT=factor(sc.MEAT), sc.SD=factor(sc.SD), sc.ALC=factor(sc.ALC), sc.BFD=factor(sc.BFD))
+#summary(table_components_all_factors)
 
 # Score histograms -----------------------------------------------------------------------
 
 # Score distribution simple histogram
 hist(df.scores_all$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cohort"), xlim=range(2, 8))
-
-summary(df.scores_all$score)
 
 # Score distribution histogram, colors according to status case VS control
 # need to find variabe indicating breast cancer
@@ -140,4 +142,12 @@ ggplot(table_scores_all) +
 
 # Score components correlations---------------------------------------------------------------------
 tabcor_all <- cor(table_components_all)
-corrplot(tabcor_all, tl.col = "black", type = "upper", title = "Score components correlations-E3N cohort")
+corrplot(tabcor_all, tl.col = "black", type = "upper") #, title = "Score components correlations-E3N cohort")
+
+#en français
+tableFR <- df.scores_all %>%
+  select(imcq3, ttailleq4, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, alcool, allaitement_dureecum) %>%
+  rename(IMC=imcq3, Tour_taille=ttailleq4, Activite_physique=TotalAPQ3, Fruits_Leg=fruitveg, Fibres=TDF, 
+         aUPF=percent_aUPF, Viande_rouge=Rmeat, Viande_transformee=Pmeat, Boissons_sucrees=sugary_drinks, Alcool=alcool, Allaitement=allaitement_dureecum)
+tabcor_allFR <- cor(tableFR)
+corrplot(tabcor_allFR, tl.col = "black", type = "upper")
