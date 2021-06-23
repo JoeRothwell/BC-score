@@ -103,14 +103,17 @@ df.scores0 <- clean_data %>%
          # Get overall score
          score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD,
          # Score by categories (1pt: scor<4, 2pts: 4 < score < 6, 3pts: score > 6) 
-         score_cat1 = ifelse(score >= 6, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score > 2, 1, 0),
+         score_cat1 = ifelse(score > 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
          score_cat = score_cat1 + score_cat2 + score_cat3) 
+view(head(df.scores0, 25))
 
 # Score by quartiles
 quartiles_score <- quantile(df.scores0$score, probs = c(1/4, 2/4, 3/4))
 quartiles_score1 <- as.numeric(quartiles_score[1]) 
 quartiles_score2 <- as.numeric(quartiles_score[2])
 quartiles_score3 <- as.numeric(quartiles_score[3]) 
+
+quartiles_score3
 
 df.scores <- df.scores0 %>%
   mutate(score_quart1 = ifelse(score >= quartiles_score3, 1, 0), 
