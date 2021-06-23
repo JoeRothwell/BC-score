@@ -24,10 +24,14 @@ mod5 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estro_THM + Pg_seul +  st
 mod6 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estriol_vag_or +  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores[post,])
 
 # score by categories (1pt: score<4, 2pts: 4 < score < 6, 3pts: score > 6) 
+df.scores$score_cat <- as.factor(df.scores$score_cat)
+
 mod7 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
 # Score by quartiles
+df.scores$score_quart <- as.factor(df.scores$score_quart)
+
 mod8 <- clogit(CT ~ score_quart + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
@@ -37,9 +41,8 @@ reg_data <- function(x){
   print(summary(x))
   mod_data <- inner_join(as.data.frame(summary(x)$coefficients), as.data.frame(summary(x)$conf.int))
   #write_xlsx(mod_data, "C:\\Users\\Clougher\\score\\results_data_tables\\mod_summary.xlsx")
-  write_xlsx(mod_data, "/Users/MacSuzanne/score/results_data_tables/mod_summary1.xlsx")
+  write_xlsx(mod_data, "/Users/MacSuzanne/score/results_data_tables/mod7_summary.xlsx")
 }
-
 
 reg_data(mod1)
 reg_data(mod2)
