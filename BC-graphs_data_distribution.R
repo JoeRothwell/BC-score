@@ -202,3 +202,5 @@ ggplot(table_scores) +
   annotation_custom(rec05, xmin =0, xmax = 6, ymin = 370) + 
   annotation_custom(rec1, xmin =6, ymin = 370) +
   annotation_custom(text, xmin =20, xmax = 35, ymin = 330)
+
+
