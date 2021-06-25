@@ -103,9 +103,8 @@ df.scores0 <- clean_data %>%
          # Get overall score
          score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD,
          # Score by categories (1pt: scor<4, 2pts: 4 < score < 6, 3pts: score > 6) 
-         score_cat1 = ifelse(score > 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
+         score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
          score_cat = score_cat1 + score_cat2 + score_cat3) 
-view(head(df.scores0, 25))
 
 # Score by quartiles
 quartiles_score <- quantile(df.scores0$score, probs = c(1/4, 2/4, 3/4))
@@ -120,6 +119,7 @@ df.scores <- df.scores0 %>%
          score_quart2 = ifelse(score >= quartiles_score2, 1, 0), 
          score_quart3 = ifelse(score >= quartiles_score1, 1, 0),
          score_quart = score_quart1 + score_quart2 + score_quart3)
+
 
 # Tables with score info -----------------------------------------------------------------------
 
@@ -157,6 +157,13 @@ score_decompCS <- df.scores %>%
 # by menopausal status
 pre <- df.scores$MENOPAUSE == 0
 post <- df.scores$MENOPAUSE == 1
+
+#dim(df.scores[pre,]) # 343
+#dim(df.scores[post,]) # 1191
+
+# Number of participants per score value and category
+summary(as.factor(df.scores$score))
+summary(as.factor(df.scores$score_cat))
 
 # Metabolomics dataset ---------------------------------------------------------------------
 
