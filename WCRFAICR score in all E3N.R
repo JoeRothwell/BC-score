@@ -56,18 +56,15 @@ data_xnames_sums_all <- data_xnames_all %>%
 # Cleaning missing data in percentage of BMI, waist circumference and breastfeeding 
 # No missing data for food components since all the tables were linked to the alim table
 # Checking if/where data is missing
-length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
-length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
-length(which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
+#length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
+#length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
+#length(which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
 
 clean_data_all1 <- data_xnames_sums_all %>% filter(!is.na(ttailleq4))
-dim(clean_data_all1) # 63 863 rows
 
-length(which(is.na(clean_data_all1$imcq3))) #2 920 missing
+#length(which(is.na(clean_data_all1$imcq3))) #2 920 missing
 clean_data_all2 <- clean_data_all1 %>% filter(!is.na(imcq3))
-dim(clean_data_all2) # 60 943 rows
-
-length(which(is.na(clean_data_all2$allaitement_dureecum))) # 1 675 missing
+#length(which(is.na(clean_data_all2$allaitement_dureecum))) # 1 675 missing
 clean_data_all <- clean_data_all2 %>% filter(!is.na(allaitement_dureecum))
 #dim(clean_data_all)
 # 59 268 rows remaining 
@@ -79,7 +76,7 @@ tertile_UPF2_all <- as.numeric(tertiles_UPF_all[2]) #cut point n°2 (half-met re
 
 # Calculate score -----------------------------------------------------------------------
 
-df.scores_all <- clean_data_all %>% 
+df.scores_all0 <- clean_data_all %>% 
   mutate(sc.BMI1 = ifelse(imcq3 >= 18.5 & imcq3 < 30, 0.25, 0), # At least 0.25 for this condition
          sc.BMI2 = ifelse(imcq3 >= 18.5 & imcq3 < 25, 0.25, 0), # Another 0.25 for this condition
          sc.TT1  = ifelse(ttailleq4 <= 88, 0.25, 0), 
@@ -107,7 +104,25 @@ df.scores_all <- clean_data_all %>%
          sc.SD = sc.SD1 + sc.SD2, sc.ALC = sc.ALC1 + sc.ALC2,
          sc.BFD = sc.BFD1 + sc.BFD2,
          # Get overall score
-         score =  sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD)
+         score =  sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD, 
+         # Score by categories (0 pt: score<2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
+         score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
+         score_cat = score_cat1 + score_cat2 + score_cat3) 
+
+# Score by quartiles
+quartiles_score_all <- quantile(df.scores_all0$score, probs = c(1/4, 2/4, 3/4))
+quartiles_score1_all <- as.numeric(quartiles_score_all[1]) 
+quartiles_score2_all <- as.numeric(quartiles_score_all[2])
+quartiles_score3_all <- as.numeric(quartiles_score_all[3]) 
+
+quartiles_score_all
+
+df.scores_all <- df.scores_all0 %>%
+  mutate(score_quart1 = ifelse(score >= quartiles_score3_all, 1, 0), 
+         score_quart2 = ifelse(score >= quartiles_score2_all, 1, 0), 
+         score_quart3 = ifelse(score >= quartiles_score1_all, 1, 0),
+         score_quart = score_quart1 + score_quart2 + score_quart3)
+
 
 # Tables with score info -----------------------------------------------------------------------
 
@@ -127,6 +142,12 @@ table_components_all_factors <- df.scores_all %>%
   mutate(sc.BMI=factor(sc.BMI), sc.TT=factor(sc.TT), sc.PA=factor(sc.PA), sc.FV=factor(sc.FV), sc.TDF=factor(sc.TDF), 
          sc.UPF=factor(sc.UPF), sc.MEAT=factor(sc.MEAT), sc.SD=factor(sc.SD), sc.ALC=factor(sc.ALC), sc.BFD=factor(sc.BFD))
 #summary(table_components_all_factors)
+
+# For subsetting ---------------------------------------------------------------------
+
+# Number of participants per score value and category
+summary(as.factor(df.scores_all$score))
+summary(as.factor(df.scores_all$score_cat))
 
 # Score histograms -----------------------------------------------------------------------
 
