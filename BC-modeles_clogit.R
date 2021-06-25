@@ -29,6 +29,13 @@ df.scores$score_cat <- as.factor(df.scores$score_cat)
 mod7 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
+# score by categories (0pt: score < 2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
+df.scores$score_cat <- as.factor(df.scores$score_cat)
+
+mod7 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                 Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
+
+
 # Score by quartiles
 df.scores$score_quart <- as.factor(df.scores$score_quart)
 
@@ -41,7 +48,7 @@ reg_data <- function(x){
   print(summary(x))
   mod_data <- inner_join(as.data.frame(summary(x)$coefficients), as.data.frame(summary(x)$conf.int))
   #write_xlsx(mod_data, "C:\\Users\\Clougher\\score\\results_data_tables\\mod_summary.xlsx")
-  write_xlsx(mod_data, "/Users/MacSuzanne/score/results_data_tables/mod7_summary.xlsx")
+  #write_xlsx(mod_data, "/Users/MacSuzanne/score/results_data_tables/mod7_summary.xlsx")
 }
 
 reg_data(mod1)
@@ -55,3 +62,11 @@ reg_data(mod8)
 
 df.scores
 quart <- quantile(clean_data$percent_aUPF, probs = c(1/3, 2/3))
+
+# Trying cox regression models
+library("survival")
+data("lung")
+head(lung)
+res.cox <- coxph(Surv(time, status) ~ sex, data=lung)
+res.cox
+summary(res.cox)
