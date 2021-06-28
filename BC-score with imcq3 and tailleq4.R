@@ -21,6 +21,9 @@ id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% 
 # Fiber data
 fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
 
+#BMI and size
+size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcbmb, imcq3, ttaillebmb, ttailleq4, thanchebmb, taille, poidsbmb, agebmb)
+
 # Metadata
 meta <- read_csv("metadata.csv", na = "9999")
 meta$CODBMB <- as.character(meta$CODBMB)
@@ -29,7 +32,7 @@ meta$CODBMB <- as.character(meta$CODBMB)
 scoredata <- meta %>% 
   left_join(id, by = "CODBMB") %>% left_join(alim, by = "ident") %>%
   left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
-  left_join(physact, by = "ident")
+  left_join(physact, by = "ident") %>% left_join(size, by = "ident")
 
 
 # Manipulating data for score -----------------------------------------------------------------------
@@ -62,9 +65,10 @@ data_xnames_sums <- data_xnames %>%
 #Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
 data_UPF <- data_xnames_sums %>% pull(percent_aUPF)
 data_allaitement <- data_xnames_sums %>% pull(allaitement_dureecum)
-data_TTAILLE <- data_xnames_sums %>% pull(TTAILLE)
+data_taille <- data_xnames_sums %>% pull(ttailleq4)
+data_imc <- data_xnames_sums %>% pull(imcq3)
 #Create a vector containing row numbers with missing data
-rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) 
+rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_taille)), which(is.na(data_imc))) 
 clean_data <- data_xnames_sums[-rows_missing_data,] #remove rows where data is missing
 
 #Tertiles : needed for aUPF consumption cutoff points
@@ -75,10 +79,10 @@ tertile_UPF2 <- as.numeric(tertiles_UPF[2]) #cut point n°2 (half-met recommenda
 # Calculate score -----------------------------------------------------------------------
 
 df.scores0 <- clean_data %>% 
-  mutate(sc.BMI1 = ifelse(BMI >= 18.5 & BMI < 30, 0.25, 0), # At least 0.25 for this condition
-         sc.BMI2 = ifelse(BMI >= 18.5 & BMI < 25, 0.25, 0), # Another 0.25 for this condition
-         sc.TT1  = ifelse(TTAILLE <= 88, 0.25, 0), 
-         sc.TT2  = ifelse(TTAILLE <= 80, 0.25, 0),
+  mutate(sc.BMI1 = ifelse(imcq3 >= 18.5 & imcq3 < 30, 0.25, 0), # At least 0.25 for this condition
+         sc.BMI2 = ifelse(imcq3 >= 18.5 & imcq3 < 25, 0.25, 0), # Another 0.25 for this condition
+         sc.TT1  = ifelse(ttailleq4 <= 88, 0.25, 0), 
+         sc.TT2  = ifelse(ttailleq4 <= 80, 0.25, 0),
          sc.PA1  = ifelse(TotalAPQ3 >= 9.375, 0.5, 0), 
          sc.PA2  = ifelse(TotalAPQ3 >= 18.75, 0.5, 0),
          sc.FV1 = ifelse(fruitveg >= 200, 0.25, 0),
@@ -105,6 +109,7 @@ df.scores0 <- clean_data %>%
          # Score by categories (1pt: scor<4, 2pts: 4 < score < 6, 3pts: score > 6) 
          score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
          score_cat = score_cat1 + score_cat2 + score_cat3) 
+# 1380 rows
 
 # Score by quartiles
 quartiles_score <- quantile(df.scores0$score, probs = c(1/4, 2/4, 3/4))
@@ -134,44 +139,26 @@ table_components <- df.scores %>%
   rename (Waist_circ.=TTAILLE, Physical_activity=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
           aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=ALCOHOL, Breastfeeding=allaitement_dureecum)
 
-# Matrix containing score information
-matrix_scores <- data.matrix(table_scores)
-matrixCTR <- table_scores %>% filter (CT == "Controls") %>% select(-CT) %>% data.matrix
-matrixCS <- table_scores %>% filter (CT == "Cases") %>% select(-CT) %>% data.matrix
 
-# Tables with score decomposition (as factors)
-score_decompCTR <- df.scores %>%
-  filter (CT == 0) %>%
-  select(sc.BMI,  sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
-  mutate(sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
-#summary(score_decompCTR)
+# Histograms -----------------------------------------------------------------------
+hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"), xlim=range(2, 8))
 
-score_decompCS <- df.scores %>%
-  filter (CT == 1) %>%
-  select(sc.BMI,  sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
-  mutate(sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
-#summary(score_decompCS)
+# Score distribution histogram, colors according to status case VS control
+ggplot(table_scores) +
+  aes(x = score, fill = CT, xmin = 2, xmax =8) +
+  geom_histogram(alpha = 0.5, position = "identity", bins = 22) +
+  labs(x = "WCRF/AICR score", title = "WCRF/AICR scores in the E3N cancer group") 
 
-
-# For subsetting ---------------------------------------------------------------------
-# by menopausal status
-pre <- df.scores$MENOPAUSE == 0
-post <- df.scores$MENOPAUSE == 1
-
-#dim(df.scores[pre,]) # 343
-#dim(df.scores[post,]) # 1191
 
 # Number of participants per score value and category
 summary(as.factor(df.scores$score))
+summary(df.scores$score)
 summary(as.factor(df.scores$score_cat))
 
-# Metabolomics dataset ---------------------------------------------------------------------
+score_decompCTR <- df.scores %>%
+  filter (CT == 0)
+summary(score_decompCTR$score)
 
-# Get metabolomics data (unscaled)
-ints <- read_tsv("1510_XMetaboliteE3N_cpmg_unscaled.txt") #contains the whole group
-ints_clean <- ints[-rows_missing_data,] #remove rows where data was missing for the score
-#ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
-#ints.cases <- ints[meta$CT == 1, ] #contains only the cases
-
-# Scale to unit variance
-metabolo <- scale(ints_clean)
+score_decompCS <- df.scores %>%
+  filter (CT == 1)
+summary(score_decompCS$score)
