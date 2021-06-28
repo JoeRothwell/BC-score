@@ -120,7 +120,6 @@ df.scores <- df.scores0 %>%
          score_quart3 = ifelse(score >= quartiles_score1, 1, 0),
          score_quart = score_quart1 + score_quart2 + score_quart3)
 
-
 # Tables with score info -----------------------------------------------------------------------
 
 # Table containing only data relevant for the score and full score
