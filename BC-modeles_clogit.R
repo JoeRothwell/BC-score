@@ -17,6 +17,7 @@ mod3 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + strata(MATCH)
 mod4 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
+# Modèles stratifiés par statut ménopausique
 # Pre-menopausal women only
 mod5 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estro_THM + Pg_seul +  strata(MATCH), data = df.scores[pre,])
 
@@ -67,6 +68,10 @@ quart <- quantile(clean_data$percent_aUPF, probs = c(1/3, 2/3))
 library("survival")
 data("lung")
 head(lung)
+# univariate cox model
 res.cox <- coxph(Surv(time, status) ~ sex, data=lung)
 res.cox
 summary(res.cox)
+# multivariate cox model
+multicox <- coxph(Surv(time, status) ~ sex + ph.ecog + wt.loss, data=lung)
+summary(multicox)
