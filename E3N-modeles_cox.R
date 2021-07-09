@@ -20,5 +20,6 @@ summary(multicox)
 coxmod1 <- coxph(Surv(duree_suivi_1, ksein) ~ score, data=df.scores_all)
 summary(coxmod1)
 
+df.scores_all$score_cat <- as.factor(df.scores_all$score_cat)
 coxmod2 <- coxph(Surv(duree_suivi_1, ksein) ~ score_cat, data=df.scores_all)
 summary(coxmod2)
