@@ -1,13 +1,23 @@
 # Case-control breast cancer study
 # simple and partial correlations between score and metabolites
-# simple correlations bewteen score components and metabolites
-
+# simple correlations between score components and metabolites
 source("BC-prep_data_calc_score.R")
 library(tidyverse)
 library(writexl)
 library(broom)
 library(corrplot)
 
+# Score components correlations---------------------------------------------------------------------
+mcor <- cor(table_scores, use = "complete.obs")
+tabcor <- cor(table_components)
+corrplot(tabcor, tl.col = "black", type = "upper") #,  title = "Score components correlations-case control study")
+
+# Modeles lineaire pour vérifier que toutes les composantes du score apportent bien de l'information
+mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
+#summary(mod)
+
+mod2 <- lm (score ~ sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD , data = df.scores)
+#summary(mod2)
 
 # WCRF/AICR full score simple correlations with metabolites ---------------------------------------------------------------------
 
@@ -76,7 +86,7 @@ plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   scale_fill_gradient2() + labs(title = 'Time-Smk-Menop')
 plot_pcor
 
-# Individual score components simple correlations---------------------------------------------------------------------
+# Individual score components simple correlations with metabolites ---------------------------------------------------------------------
 
 # Simple correlation for ALCOHOL
 simplecor.ALC <- function(x) cor.test(table_scores$ALCOHOL[table_scores$ALCOHOL > 0], x, method = "spearman")
@@ -89,9 +99,3 @@ simplecor.BMI <- function(x) cor.test(table_scores$BMI[table_scores$BMI > 0], x,
 corlist.BMI <- apply(metabolo[table_scores$BMI > 0, ], 2, simplecor.BMI)
 # Convert to data frame and add compound names, order by correlation
 cordat.BMI <- map_dfr(corlist.BMI, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-
-
-# Score components correlations---------------------------------------------------------------------
-mcor <- cor(table_scores, use = "complete.obs")
-tabcor <- cor(table_components)
-corrplot(tabcor, tl.col = "black", type = "upper",  title = "Score components correlations-case control study")
