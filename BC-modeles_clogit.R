@@ -43,7 +43,6 @@ df.scores$score_quart <- as.factor(df.scores$score_quart)
 mod8 <- clogit(CT ~ score_quart + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
-
 # model summaries
 reg_data <- function(x){
   print(summary(x))
@@ -60,18 +59,3 @@ reg_data(mod5)
 reg_data(mod6)
 reg_data(mod7)
 reg_data(mod8)
-
-df.scores
-quart <- quantile(clean_data$percent_aUPF, probs = c(1/3, 2/3))
-
-# Trying cox regression models
-library("survival")
-data("lung")
-head(lung)
-# univariate cox model
-res.cox <- coxph(Surv(time, status) ~ sex, data=lung)
-res.cox
-summary(res.cox)
-# multivariate cox model
-multicox <- coxph(Surv(time, status) ~ sex + ph.ecog + wt.loss, data=lung)
-summary(multicox)
