@@ -25,11 +25,21 @@ fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
 meta <- read_csv("metadata.csv", na = "9999")
 meta$CODBMB <- as.character(meta$CODBMB)
 
+# Education
+educ <- read_sas("D01_20180914_niveau_etudes_Q1.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, bacfemme2)
+
+# Density population of city where they live
+city <- read_sas("d01_20190625_ville_q4.sas7bdat")
+
+# Work 
+work <- read_sas("d02_20160404_prof_q2.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, PROFQ2_F, SALAIREF)
+
 # Create a single table (containing both cases and controls)
 scoredata <- meta %>% 
   left_join(id, by = "CODBMB") %>% left_join(alim, by = "ident") %>%
   left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
-  left_join(physact, by = "ident")
+  left_join(physact, by = "ident") %>% left_join(educ, by = "ident") %>%
+  left_join(city, by = "ident") %>% left_join(work, by = "ident")
 
 
 # Manipulating data for score -----------------------------------------------------------------------
@@ -112,7 +122,6 @@ quartiles_score1 <- as.numeric(quartiles_score[1])
 quartiles_score2 <- as.numeric(quartiles_score[2])
 quartiles_score3 <- as.numeric(quartiles_score[3]) 
 
-quartiles_score3
 
 df.scores <- df.scores0 %>%
   mutate(score_quart1 = ifelse(score >= quartiles_score3, 1, 0), 
@@ -161,8 +170,28 @@ post <- df.scores$MENOPAUSE == 1
 #dim(df.scores[post,]) # 1191
 
 # Number of participants per score value and category
-summary(as.factor(df.scores$score))
-summary(as.factor(df.scores$score_cat))
+#summary(as.factor(df.scores$score))
+#summary(as.factor(df.scores$score_cat))
+
+# by score category
+cat0_2 <- df.scores$score_cat == 0 #actually useless, no one with score < 2 in the case control study
+cat2_4 <- df.scores$score_cat == 1
+cat4_6 <- df.scores$score_cat == 2
+cat6_8 <- df.scores$score_cat == 3
+
+soc2_4 <- df.scores[cat2_4,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
+  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
+         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+
+soc4_6 <- df.scores[cat4_6,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
+  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
+         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+soc6_8 <- df.scores[cat6_8,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
+  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
+         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+
+
+summary(soc6_8)
 
 # Metabolomics dataset ---------------------------------------------------------------------
 
