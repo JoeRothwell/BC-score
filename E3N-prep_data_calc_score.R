@@ -24,6 +24,9 @@ size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcbmb, imcq3, tta
 cancer <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
 cancer_full <- read_sas("baseline_breast_cancer.sas7bdat") 
 
+# Smoking
+smk <- read_sas("D01_20131018_debfinexpo_FR_Q1Q8.sas7bdat") %>% mutate(ident=IDENT) %>% select(ident, tabacq3)
+
 # Create a single table (containing both cases and controls)
 scoredata_all <-  alim %>%
   left_join(size, by = "ident") %>% left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
@@ -150,5 +153,5 @@ table_components_all_factors <- df.scores_all %>%
 # For subsetting ---------------------------------------------------------------------
 
 # Number of participants per score value and category
-summary(as.factor(df.scores_all$score))
-summary(as.factor(df.scores_all$score_cat))
+#summary(as.factor(df.scores_all$score))
+#summary(as.factor(df.scores_all$score_cat))
