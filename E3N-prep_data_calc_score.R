@@ -18,19 +18,26 @@ physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT) %>% select
 fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)  
 
 # BMI and waist size data
-size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcbmb, imcq3, ttaillebmb, ttailleq4, thanchebmb, taille, poidsbmb, agebmb)
+size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcq3, ttailleq4, taille, ageq3)
 
 # Breast cancer data
 cancer <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
-cancer_full <- read_sas("baseline_breast_cancer.sas7bdat") 
+
+# Menopause
+menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat")
+#pill <- read_sas("pilule_q1q9.sas7bdat")
 
 # Smoking
-smk <- read_sas("D01_20131018_debfinexpo_FR_Q1Q8.sas7bdat") %>% mutate(ident=IDENT) %>% select(ident, tabacq3)
+#smk <- read_sas("D01_20131018_debfinexpo_FR_Q1Q8.sas7bdat") #%>% mutate(ident=IDENT) %>% select(ident, tabacq3)
+# table only contains info on 32730 observations, too small
+
+# Education
+educ <- read_sas("D01_20180914_niveau_etudes_Q1.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, bacfemme2)
 
 # Create a single table (containing both cases and controls)
 scoredata_all <-  alim %>%
-  left_join(size, by = "ident") %>% left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
-  left_join(physact, by = "ident") %>% left_join(cancer, by="ident")
+  left_join(size, by = "ident") %>% left_join(menopause, by = "ident") %>% left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
+  left_join(physact, by = "ident") %>% left_join(cancer, by = "ident") %>% left_join(educ, by = "ident")
 #dim(scoredata_all) # 74 552 rows 
 
 # Manipulating data for score -----------------------------------------------------------------------
@@ -60,36 +67,32 @@ data_xnames_sums_all <- data_xnames_all %>%
                 SUCRE, EDULC, LAIT, VIN, MG)) %>% #g/day
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
 
-# Cleaning missing data in percentage of BMI, waist circumference and breastfeeding 
-# No missing data for food components since all the tables were linked to the alim table
-# Checking if/where data is missing
+# Checking and cleaning missing data -----------------------------------------------------------------------
+# Concerns BMI, waist circumference and breastfeeding 
 #length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
 #length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
 #length(which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
 
 clean_data_all1 <- data_xnames_sums_all %>% filter(!is.na(ttailleq4))
-
-#length(which(is.na(clean_data_all1$imcq3))) #2 920 missing
 clean_data_all2 <- clean_data_all1 %>% filter(!is.na(imcq3))
-#length(which(is.na(clean_data_all2$allaitement_dureecum))) # 1 675 missing
 clean_data_all <- clean_data_all2 %>% filter(!is.na(allaitement_dureecum))
-dim(clean_data_all)
 # 59 268 rows remaining 
+
+# Calculate score -----------------------------------------------------------------------
 
 #Tertiles : needed for aUPF consumption cutoff points
 tertiles_UPF_all <- quantile(clean_data_all$percent_aUPF, probs = c(1/3, 2/3))
 tertile_UPF1_all <- as.numeric(tertiles_UPF_all[1]) #cut point n°1 (fully-met recommendation)
 tertile_UPF2_all <- as.numeric(tertiles_UPF_all[2]) #cut point n°2 (half-met recommendation)
 
-# Calculate score -----------------------------------------------------------------------
-
+# Calculating score
 df.scores_all0 <- clean_data_all %>% 
   mutate(sc.BMI1 = ifelse(imcq3 >= 18.5 & imcq3 < 30, 0.25, 0), # At least 0.25 for this condition
          sc.BMI2 = ifelse(imcq3 >= 18.5 & imcq3 < 25, 0.25, 0), # Another 0.25 for this condition
-         sc.TT1  = ifelse(ttailleq4 <= 88, 0.25, 0), 
-         sc.TT2  = ifelse(ttailleq4 <= 80, 0.25, 0),
-         sc.PA1  = ifelse(TotalAPQ3 >= 9.375, 0.5, 0), 
-         sc.PA2  = ifelse(TotalAPQ3 >= 18.75, 0.5, 0),
+         sc.TT1 = ifelse(ttailleq4 <= 88, 0.25, 0), 
+         sc.TT2 = ifelse(ttailleq4 <= 80, 0.25, 0),
+         sc.PA1 = ifelse(TotalAPQ3 >= 9.375, 0.5, 0), 
+         sc.PA2 = ifelse(TotalAPQ3 >= 18.75, 0.5, 0),
          sc.FV1 = ifelse(fruitveg >= 200, 0.25, 0),
          sc.FV2 = ifelse(fruitveg >= 400, 0.25, 0),
          sc.TDF1 = ifelse(TDF >= 15, 0.25, 0),
@@ -114,22 +117,28 @@ df.scores_all0 <- clean_data_all %>%
          score =  sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD, 
          # Score by categories (0 pt: score<2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
          score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
-         score_cat = score_cat1 + score_cat2 + score_cat3) 
+         score_cat = score_cat1 + score_cat2 + score_cat3,
+         # Determine menopausal status
+         menop_status = ifelse(agemeno.x <= ageq3, 1,0)) 
 
-# Score by quartiles
+# Create score quartiles and categories -----------------------------------------------------------------------
+
+# Calculate quartiles
 quartiles_score_all <- quantile(df.scores_all0$score, probs = c(1/4, 2/4, 3/4))
 quartiles_score1_all <- as.numeric(quartiles_score_all[1]) 
 quartiles_score2_all <- as.numeric(quartiles_score_all[2])
 quartiles_score3_all <- as.numeric(quartiles_score_all[3]) 
-
-quartiles_score_all
 
 df.scores_all <- df.scores_all0 %>%
   mutate(score_quart1 = ifelse(score >= quartiles_score3_all, 1, 0), 
          score_quart2 = ifelse(score >= quartiles_score2_all, 1, 0), 
          score_quart3 = ifelse(score >= quartiles_score1_all, 1, 0),
          score_quart = score_quart1 + score_quart2 + score_quart3)
-dim(df.scores_all)
+
+# Mutate score quartiles and categories to factors
+df.scores_all$score_cat <- as.factor(df.scores_all$score_cat)
+df.scores_all$score_quart <- as.factor(df.scores_all$score_quart)
+
 
 # Tables with score info -----------------------------------------------------------------------
 
@@ -151,6 +160,25 @@ table_components_all_factors <- df.scores_all %>%
 #summary(table_components_all_factors)
 
 # For subsetting ---------------------------------------------------------------------
+cat0_2 <- df.scores_all$score_cat == 0 
+cat2_4 <- df.scores_all$score_cat == 1
+cat4_6 <- df.scores_all$score_cat == 2
+cat6_8 <- df.scores_all$score_cat == 3
+
+# table with women with scores from 2 to 4 - only a few variables
+soc2_4 <- df.scores[cat2_4,] %>% select (ID, AGE, alcool, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
+  mutate(alcool=as.factor(alcool), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
+         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+
+# table with women with scores from 4 to 6 - only a few variables
+soc4_6 <- df.scores[cat4_6,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
+  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
+         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+# table with women with scores from 6 to 8 - only a few variables
+soc6_8 <- df.scores[cat6_8,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
+  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
+         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+
 
 # Number of participants per score value and category
 #summary(as.factor(df.scores_all$score))
