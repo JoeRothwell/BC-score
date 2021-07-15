@@ -24,30 +24,44 @@ mod5 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estro_THM + Pg_seul +  st
 # Post-menopausal women only
 mod6 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estriol_vag_or +  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores[post,])
 
-# score by categories (1pt: score<4, 2pts: 4 < score < 6, 3pts: score > 6) 
-df.scores$score_cat <- as.factor(df.scores$score_cat)
-
-mod7 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
-                 Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
-
 # score by categories (0pt: score < 2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
-df.scores$score_cat <- as.factor(df.scores$score_cat)
-
 mod7 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
 
 # Score by quartiles
-df.scores$score_quart <- as.factor(df.scores$score_quart)
-
 mod8 <- clogit(CT ~ score_quart + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
                  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
-# model summaries
+# Adding level of education as a variable
+# normal score
+mod9 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                 Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
+# score as categories
+mod10 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
+
+# Adding age and daily energy intake (kcal) as a variable
+# normal score
+mod11 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                 Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + AGE + KCAL + strata(MATCH), data = df.scores)
+# score as categories
+mod12 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + AGE + KCAL + strata(MATCH), data = df.scores)
+
+
+# only added age
+mod13 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + AGE + strata(MATCH), data = df.scores)
+# only added daily energy intake
+mod14 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+                  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
+
+# Models' summaries
 reg_data <- function(x){
   print(summary(x))
   mod_data <- inner_join(as.data.frame(summary(x)$coefficients), as.data.frame(summary(x)$conf.int))
-  #write_xlsx(mod_data, "C:\\Users\\Clougher\\score\\results_data_tables\\mod_summary.xlsx")
+  write_xlsx(mod_data, "C:\\Users\\Clougher\\score\\results_data_tables\\mod12_summary.xlsx")
   #write_xlsx(mod_data, "/Users/MacSuzanne/score/results_data_tables/mod7_summary.xlsx")
 }
 
@@ -59,3 +73,7 @@ reg_data(mod5)
 reg_data(mod6)
 reg_data(mod7)
 reg_data(mod8)
+reg_data(mod9)
+reg_data(mod10)
+reg_data(mod11)
+reg_data(mod12)
