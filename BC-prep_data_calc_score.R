@@ -19,7 +19,7 @@ physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT) %>% select
 id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% select(c("CODBMB", "ident"))
 
 # Fiber data
-fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
+fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, KCAL, alcool, FIBR, SDF, TDF)
 
 # Metadata
 meta <- read_csv("metadata.csv", na = "9999")
@@ -42,7 +42,7 @@ scoredata <- meta %>%
   left_join(city, by = "ident") %>% left_join(work, by = "ident")
 
 
-# Manipulating data for score -----------------------------------------------------------------------
+# Changing column names -----------------------------------------------------------------------
 
 #Renaming all columns starting with "_" (from 'alim'/frjour table)
 data_xnames <- scoredata %>%
@@ -69,6 +69,8 @@ data_xnames_sums <- data_xnames %>%
                 SUCRE, EDULC, LAIT, VIN, MG)) %>% #g/day
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
 
+# Removing missing data -----------------------------------------------------------------------
+
 #Cleaning missing data in percentage of aUPF, breastfeeding and waist circumference
 data_UPF <- data_xnames_sums %>% pull(percent_aUPF)
 data_allaitement <- data_xnames_sums %>% pull(allaitement_dureecum)
@@ -77,13 +79,14 @@ data_TTAILLE <- data_xnames_sums %>% pull(TTAILLE)
 rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) 
 clean_data <- data_xnames_sums[-rows_missing_data,] #remove rows where data is missing
 
+# Calculate score -----------------------------------------------------------------------
+
 #Tertiles : needed for aUPF consumption cutoff points
 tertiles_UPF <- quantile(clean_data$percent_aUPF, probs = c(1/3, 2/3))
 tertile_UPF1 <- as.numeric(tertiles_UPF[1]) #cut point n°1 (fully-met recommendation)
 tertile_UPF2 <- as.numeric(tertiles_UPF[2]) #cut point n°2 (half-met recommendation)
 
-# Calculate score -----------------------------------------------------------------------
-
+# Calculating score
 df.scores0 <- clean_data %>% 
   mutate(sc.BMI1 = ifelse(BMI >= 18.5 & BMI < 30, 0.25, 0), # At least 0.25 for this condition
          sc.BMI2 = ifelse(BMI >= 18.5 & BMI < 25, 0.25, 0), # Another 0.25 for this condition
@@ -116,7 +119,9 @@ df.scores0 <- clean_data %>%
          score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
          score_cat = score_cat1 + score_cat2 + score_cat3) 
 
-# Score by quartiles
+# Create score quartiles and categories -----------------------------------------------------------------------
+
+# Calculate quartiles
 quartiles_score <- quantile(df.scores0$score, probs = c(1/4, 2/4, 3/4))
 quartiles_score1 <- as.numeric(quartiles_score[1]) 
 quartiles_score2 <- as.numeric(quartiles_score[2])
@@ -128,6 +133,11 @@ df.scores <- df.scores0 %>%
          score_quart2 = ifelse(score >= quartiles_score2, 1, 0), 
          score_quart3 = ifelse(score >= quartiles_score1, 1, 0),
          score_quart = score_quart1 + score_quart2 + score_quart3)
+
+# Mutate score quartiles and categories to factors
+df.scores$score_cat <- as.factor(df.scores$score_cat)
+df.scores$score_quart <- as.factor(df.scores$score_quart)
+
 
 # Tables with score info -----------------------------------------------------------------------
 
@@ -173,25 +183,23 @@ post <- df.scores$MENOPAUSE == 1
 #summary(as.factor(df.scores$score))
 #summary(as.factor(df.scores$score_cat))
 
-# by score category
+# By score category
 cat0_2 <- df.scores$score_cat == 0 #actually useless, no one with score < 2 in the case control study
 cat2_4 <- df.scores$score_cat == 1
 cat4_6 <- df.scores$score_cat == 2
 cat6_8 <- df.scores$score_cat == 3
-
+# table with women with scores from 2 to 4 - only a few variables
 soc2_4 <- df.scores[cat2_4,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
   mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
          COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
-
+# table with women with scores from 4 to 6 - only a few variables
 soc4_6 <- df.scores[cat4_6,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
   mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
          COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
+# table with women with scores from 6 to 8 - only a few variables
 soc6_8 <- df.scores[cat6_8,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
   mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
          COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
-
-
-summary(soc6_8)
 
 # Metabolomics dataset ---------------------------------------------------------------------
 
