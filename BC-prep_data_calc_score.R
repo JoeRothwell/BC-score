@@ -79,6 +79,19 @@ data_TTAILLE <- data_xnames_sums %>% pull(TTAILLE)
 rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) 
 clean_data <- data_xnames_sums[-rows_missing_data,] #remove rows where data is missing
 
+#tests
+scoredataCTR <- clean_data %>% filter(CT == 0) #764 controls remaining
+scoredataCS <- clean_data %>% filter(CT == 1)  #770 cases remaning
+# probably should exclude the cases without a control
+matches <- clean_data %>% select(CODBMB, ID, CT, MATCH)
+
+#alternative to exclude the pairs with missing data and not only the individuals
+rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) 
+table_missing_data <- data_xnames_sums[rows_missing_data,]
+match_missing <- table_missing_data %>% pull(MATCH)
+clean <- data_xnames_sums %>% 
+
+
 # Calculate score -----------------------------------------------------------------------
 
 #Tertiles : needed for aUPF consumption cutoff points
