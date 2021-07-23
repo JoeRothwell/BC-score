@@ -18,6 +18,7 @@ mod4 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_o
 
 # Modèles stratifiés par statut ménopausique
 # Pre-menopausal women only
+# only 173 events, not many pre-menopausal women
 mod5 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estro_THM + Pg_seul +  strata(MATCH), data = df.scores[pre,])
 
 # Post-menopausal women only
@@ -73,10 +74,10 @@ ml_menop <- c("pre-menopause", "post-menopause")
 
 
 library(broom)
-library(tidyverse)
 tablemods <- map_df(modlist, ~tidy(., exponentiate = T)) %>% filter(term == "score") %>%
-  mutate_if(is.numeric, ~round(.,2)) %>% unite(OR.CI, estimate, conf.low, conf.high, sep = "-") %>%
+  mutate_if(is.numeric, ~round(.,2)) %>% unite(conf.int, sep = " _ ") %>%
   add_column(model = ml_names, .before = T)
+
 
 reg_data(mod1)
 reg_data(mod2)
