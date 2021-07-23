@@ -2,12 +2,11 @@
 # simple and partial correlations between score and metabolites
 # simple correlations between score components and metabolites
 source("BC-prep_data_calc_score.R")
-library(tidyverse)
 library(writexl)
 library(broom)
 library(corrplot)
 
-# Score components correlations---------------------------------------------------------------------
+# Plot of score components correlations (with each other)---------------------------------------------------------------------
 mcor <- cor(table_scores, use = "complete.obs")
 tabcor <- cor(table_components)
 corrplot(tabcor, tl.col = "black", type = "upper") #,  title = "Score components correlations-case control study")
@@ -62,23 +61,18 @@ df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy in
 
 #Partial correlation controlling for Fasting and smoking status
 partialcor <- function(x) {
-  
   # Linear model of score and confounders
   mod1 <- lm(score ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3 + CO + DIABETE, data = df.scores[df.scores$score > 0, ])
-  
   # Linear model of metabolites and confounders
   mod2 <- lm(x ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
-  
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
-  
 }
 
 pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time-smk-menop_newcovar_metab.xlsx") 
+#write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time-smk-menop_newcovar_metab.xlsx") 
 #write_xlsx(pcordat, "Users/MacSuzanne/score/results_data_tables/partial_corr-time.xlsx") 
-
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
