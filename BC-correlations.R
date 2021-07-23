@@ -13,11 +13,11 @@ tabcor <- cor(table_components)
 corrplot(tabcor, tl.col = "black", type = "upper") #,  title = "Score components correlations-case control study")
 
 # Modeles lineaire pour vérifier que toutes les composantes du score apportent bien de l'information
-mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
-#summary(mod)
+lin_mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
+#summary(lin_mod)
 
-mod2 <- lm (score ~ sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD , data = df.scores)
-#summary(mod2)
+lin_mod2 <- lm (score ~ sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD , data = df.scores)
+#summary(lin_mod2)
 
 # WCRF/AICR full score simple correlations with metabolites ---------------------------------------------------------------------
 
@@ -59,7 +59,6 @@ df.scores$SMK <- as.factor(df.scores$SMK) #smoking status
 df.scores$DIAGSAMPLINGCat3 <- as.factor(df.scores$DIAGSAMPLINGCat3) #time between blood collection and diagnosis
 df.scores$CO <- as.factor(df.scores$CO) #oral contraceptives
 df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy intake
-#df.scores$ <- as.factor(df.scores$)
 
 #Partial correlation controlling for Fasting and smoking status
 partialcor <- function(x) {
