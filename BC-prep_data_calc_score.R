@@ -79,19 +79,6 @@ data_TTAILLE <- data_xnames_sums %>% pull(TTAILLE)
 rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) 
 clean_data <- data_xnames_sums[-rows_missing_data,] #remove rows where data is missing
 
-#tests
-scoredataCTR <- clean_data %>% filter(CT == 0) #764 controls remaining
-scoredataCS <- clean_data %>% filter(CT == 1)  #770 cases remaning
-# probably should exclude the cases without a control
-matches <- clean_data %>% select(CODBMB, ID, CT, MATCH)
-
-#alternative to exclude the pairs with missing data and not only the individuals
-rows_missing_data <- c(which(is.na(data_UPF)), which(is.na(data_allaitement)), which(is.na(data_TTAILLE))) 
-table_missing_data <- data_xnames_sums[rows_missing_data,]
-match_missing <- table_missing_data %>% pull(MATCH)
-clean <- data_xnames_sums %>% 
-
-
 # Calculate score -----------------------------------------------------------------------
 
 #Tertiles : needed for aUPF consumption cutoff points
@@ -153,15 +140,14 @@ df.scores$score_quart <- as.factor(df.scores$score_quart)
 
 
 # Tables with score info -----------------------------------------------------------------------
+score_varlist <- c("BMI", "TTAILLE", "TotalAPQ3", "fruitveg", "TDF", "percent_aUPF", "Rmeat", "Pmeat", "sugary_drinks", "ALCOHOL", "allaitement_dureecum")
 
 # Table containing only data relevant for the score and full score
-table_scores <- df.scores %>%
-  select(CT, BMI, TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum, score) %>%
+table_scores <- df.scores %>% select(CT, score_varlist, score) %>%
   mutate(CT = factor(CT, levels = c("0", "1"), labels = c("Controls", "Cases")))
 
 # Table containing only score components 
-table_components <- df.scores %>%
-  select(BMI, TTAILLE, TotalAPQ3, fruitveg, TDF, percent_aUPF, Rmeat, Pmeat, sugary_drinks, ALCOHOL, allaitement_dureecum) %>%
+table_components <- df.scores %>% select (score_varlist) %>%
   rename (Waist_circ.=TTAILLE, Physical_activity=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
           aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=ALCOHOL, Breastfeeding=allaitement_dureecum)
 
@@ -173,14 +159,12 @@ matrixCS <- table_scores %>% filter (CT == "Cases") %>% select(-CT) %>% data.mat
 # Tables with score decomposition (as factors)
 score_decompCTR <- df.scores %>%
   filter (CT == 0) %>%
-  select(sc.BMI,  sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
-  mutate(sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
+  transmute_at(vars(sc.BMI:score), as.factor) #easy way to select only the needed variables and mutate them into factors
 #summary(score_decompCTR)
 
 score_decompCS <- df.scores %>%
   filter (CT == 1) %>%
-  select(sc.BMI,  sc.TT, sc.PA, sc.FV, sc.TDF, sc.UPF, sc.MEAT, sc.SD, sc.ALC, sc.BFD, score) %>%
-  mutate(sc.BMI = as.factor(sc.BMI), sc.TT = as.factor(sc.TT),sc.PA = as.factor(sc.PA), sc.FV = as.factor(sc.FV), sc.TDF = as.factor(sc.TDF), sc.UPF = as.factor(sc.UPF), sc.MEAT = as.factor(sc.MEAT), sc.SD = as.factor(sc.SD), sc.ALC = as.factor(sc.ALC), sc.BFD = as.factor(sc.BFD))
+  transmute_at(vars(sc.BMI:score), as.factor)
 #summary(score_decompCS)
 
 
@@ -201,19 +185,18 @@ cat0_2 <- df.scores$score_cat == 0 #actually useless, no one with score < 2 in t
 cat2_4 <- df.scores$score_cat == 1
 cat4_6 <- df.scores$score_cat == 2
 cat6_8 <- df.scores$score_cat == 3
-# table with women with scores from 2 to 4 - only a few variables
-soc2_4 <- df.scores[cat2_4,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
-  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
-         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
-# table with women with scores from 4 to 6 - only a few variables
-soc4_6 <- df.scores[cat4_6,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
-  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
-         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
-# table with women with scores from 6 to 8 - only a few variables
-soc6_8 <- df.scores[cat6_8,] %>% select (ID, SMK, AGE, ALCOHOL, Life_Alcohol_Pattern_1, CO, MENOPAUSE, DIABETE, nullipare, age1ergross, TotalAPQ3, bacfemme2, COMHAB1, comtra1, COMHAB2, COMTRAV2, PROFQ2_F, SALAIREF, score, score_cat) %>%
-  mutate(SMK=as.factor(SMK), Life_Alcohol_Pattern_1=as.factor(Life_Alcohol_Pattern_1), CO=as.factor(CO), MENOPAUSE=as.factor(MENOPAUSE), DIABETE=as.factor(DIABETE), nullipare=as.factor(nullipare), age1ergross, TotalAPQ3, bacfemme2=as.factor(bacfemme2), 
-         COMHAB1=as.factor(COMHAB1), comtra1=as.factor(comtra1), COMHAB2=as.factor(COMHAB2), COMTRAV2=as.factor(COMTRAV2), PROFQ2_F=as.factor(PROFQ2_F),  score.fact=as.factor(score), score_cat=as.factor(score_cat))
 
+varlist <- c("ID", "SMK", "AGE", "ALCOHOL", "Life_Alcohol_Pattern_1", "CO", "MENOPAUSE", "DIABETE", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "COMHAB1", "comtra1", "COMHAB2", "COMTRAV2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
+
+# table with women with scores from 2 to 4 - only a few variables
+soc2_4 <- df.scores[cat2_4,] %>% transmute_at(vars(varlist), as.factor)
+  
+# table with women with scores from 4 to 6 - only a few variables
+soc4_6 <- df.scores[cat4_6,] %>% transmute_at(vars(varlist), as.factor)
+
+# table with women with scores from 6 to 8 - only a few variables
+soc6_8 <- df.scores[cat6_8,] %>% transmute_at(vars(varlist), as.factor)
+  
 # Metabolomics dataset ---------------------------------------------------------------------
 
 # Get metabolomics data (unscaled)
