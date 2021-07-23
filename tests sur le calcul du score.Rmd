@@ -433,3 +433,16 @@ ggplot(scores_fct) +
   aes (x=score, y=allaitement_dureecum, color = CT) +
   geom_jitter()
 ```
+
+Tests/exercices sur le modèle de Cox
+```{r}
+data("lung")
+head(lung)
+# univariate cox model
+res.cox <- coxph(Surv(time, status) ~ sex, data=lung)
+res.cox
+summary(res.cox)
+# multivariate cox model
+multicox <- coxph(Surv(time, status) ~ sex + ph.ecog + wt.loss, data=lung)
+summary(multicox)
+```
