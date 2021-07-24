@@ -4,7 +4,7 @@
 source("BC-prep_data_calc_score.R")
 library(pls)
 
-# tests ------------
+# tests ------------------------------------------------------------------------
 data(yarn)
 data(oliveoil)
 data(gasoline)
@@ -21,8 +21,7 @@ plot(RMSEP(gas1), legendpos = "topright") #cross-validated RMSEP curves for the 
 plot(gas1, ncomp = 2, asp = 1, line = TRUE) #cross-validated predictions for the gasoline data
 plot(gas1, plottype = "score", comps = 1:3) #score plot for the gasoline data
 explvar(gas1) #extraction of the explained variances
-
-# end tests ------------
+# end tests ------------------------------------------------------------------------
 
 # Create a single table with score + metabolite information
 metabolo_df <- as.data.frame(metabolo)
