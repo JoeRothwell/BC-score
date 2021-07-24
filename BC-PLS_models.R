@@ -2,9 +2,9 @@
 # PLS models
 
 source("BC-prep_data_calc_score.R")
+library(pls)
 
 # tests ------------
-library(pls)
 data(yarn)
 data(oliveoil)
 data(gasoline)
@@ -31,6 +31,6 @@ metab_scores <- bind_cols(scores, metabolo_df)
 
 metab_names <- c(colnames(metabolo_df))
 
+#First plsr model to see RMSEP and figure out optimum ncomp
 modplsr <- plsr(score ~., data = metab_scores, validation = "LOO")
-summary(modplsr)
 plot(RMSEP(modplsr, legendpos = "topright"))
