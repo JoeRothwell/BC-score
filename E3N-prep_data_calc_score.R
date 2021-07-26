@@ -1,7 +1,7 @@
 # E3N cohort
 # Preparing data and calculating WCRF/AICR score
-library(haven)
 library(tidyverse)
+library(haven)
 
 # Datasets-----------------------------------------------------------------------
 
@@ -21,7 +21,10 @@ fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
 size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcq3, ttailleq4, taille, ageq3)
 
 # Breast cancer data
-cancer <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
+cancer_postmenop <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
+cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, ageq3ve, duree_suivi) %>%
+  mutate (duree_suivi1 = agefin - ageq3ve)
+# 0 : pre-menopause, 1 to 3 : post-menopause (1 unknown, 2 naturally, 3 artificially)
 
 # Menopause
 menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat")
@@ -151,12 +154,11 @@ table_scores_all <- df.scores_all %>% select(score_varlist_all, score)
 
 # Table containing only score components
 table_components_all <- df.scores_all %>% select(score_varlist_all) %>%
-  rename(BMI=imcq3, Waist_circ=ttailleq4, Physical_act=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
+rename(BMI=imcq3, Waist_circ=ttailleq4, Physical_act=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
          aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=alcool, Breastfeeding=allaitement_dureecum)
 
 # Table to look at the score components' distribution
-table_components_all_factors <- df.scores_all %>%
-  transmute_at(vars(sc.BMI:score), as.factor)
+table_components_all_factors <- df.scores_all %>% transmute_at(vars(sc.BMI:score), as.factor)
 
 # For subsetting ---------------------------------------------------------------------
 cat0_2_all <- df.scores_all$score_cat == 0 
@@ -164,13 +166,13 @@ cat2_4_all <- df.scores_all$score_cat == 1
 cat4_6_all <- df.scores_all$score_cat == 2
 cat6_8_all <- df.scores_all$score_cat == 3
 
-varlist_all <- c("ident", "ageq3", "alcool", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
+#varlist_all <- c("ident", "ageq3", "alcool", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
 
 # table with women with different score categories - only a few variables
-soc0_2_all <- df.scores_all[cat0_2_all,] %>% transmute_at(vars(varlist_all), as.factor)
-soc2_4_all <- df.scores_all[cat2_4_all,] %>% transmute_at(vars(varlist_all), as.factor)
-soc4_6_all <- df.scores_all[cat4_6_all,] %>% transmute_at(vars(varlist_all), as.factor)
-soc6_8_all <- df.scores_all[cat6_8_all,] %>% transmute_at(vars(varlist_all), as.factor)
+#soc0_2_all <- df.scores_all[cat0_2_all,] %>% transmute_at(vars(varlist_all), as.factor)
+#soc2_4_all <- df.scores_all[cat2_4_all,] %>% transmute_at(vars(varlist_all), as.factor)
+#soc4_6_all <- df.scores_all[cat4_6_all,] %>% transmute_at(vars(varlist_all), as.factor)
+#soc6_8_all <- df.scores_all[cat6_8_all,] %>% transmute_at(vars(varlist_all), as.factor)
 
 # Number of participants per score value and category
 #summary(as.factor(df.scores_all$score))
