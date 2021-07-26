@@ -8,8 +8,8 @@ library(corrplot)
 
 # Plot of score components correlations (with each other)---------------------------------------------------------------------
 mcor <- cor(table_scores, use = "complete.obs")
-tabcor <- cor(table_components)
-corrplot(tabcor, tl.col = "black", type = "upper") #,  title = "Score components correlations-case control study")
+tabcor <- cor(table_componentsFR)
+corrplot(tabcor, tl.col = "black", type = "upper") #,  title = "Corrélations entre les composantes du score")
 
 # Modeles lineaire pour vérifier que toutes les composantes du score apportent bien de l'information
 lin_mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
