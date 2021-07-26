@@ -1,6 +1,5 @@
 # Case-control breast cancer study
 # PLS models
-
 source("BC-prep_data_calc_score.R")
 library(pls)
 
@@ -31,5 +30,13 @@ metab_scores <- bind_cols(scores, metabolo_df)
 metab_names <- c(colnames(metabolo_df))
 
 #First plsr model to see RMSEP and figure out optimum ncomp
-modplsr <- plsr(score ~., data = metab_scores, validation = "LOO")
+modplsr_test <- plsr(score ~., data = metab_scores, validation = "LOO")
+plot(RMSEP(modplsr_test, legendpos = "topright"))
+#Second model with ncomp = 10 to have a more precise minimal number of ncomp
+modplsr <- plsr(score ~., ncomp = 10, data = metab_scores, validation = "LOO")
 plot(RMSEP(modplsr, legendpos = "topright"))
+# ncomp = 5 seems to be the best choice
+
+modplsr <- plsr(score ~., ncomp = 5, data = metab_scores, validation = "LOO")
+plot(modplsr, ncomp = 5, asp = 1, line = TRUE) #not sure if it's a good thing to plot, pretty sure it's useless for the score
+plot(modplsr, plottype= "score", comps = 1:6)
