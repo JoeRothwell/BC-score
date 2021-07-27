@@ -27,7 +27,3 @@ coxmod3.2 <- coxph(Surv(duree_suivi1, ksein) ~ score_cat + bacfemme2 + statfin_d
 summary(coxmod1.2)
 summary(coxmod2.2)
 summary(coxmod3.2)
-
-summary(as.factor(df.scores_all$statfin_dquest.x))
-summary(as.factor(df.scores_all$statfin_dquest.y))
-ggr <- df.scores_all %>% select(ident, statfin_dquest.x, statfin_dquest.y)
