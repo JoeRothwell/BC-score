@@ -39,4 +39,4 @@ plot(RMSEP(modplsr, legendpos = "topright"))
 
 modplsr <- plsr(score ~., ncomp = 5, data = metab_scores, validation = "LOO")
 plot(modplsr, ncomp = 5, asp = 1, line = TRUE) #not sure if it's a good thing to plot, pretty sure it's useless for the score
-plot(modplsr, plottype= "score", comps = 1:6)
+plot(modplsr, plottype= "score", comps = 1:5)
