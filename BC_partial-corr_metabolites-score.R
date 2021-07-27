@@ -94,7 +94,7 @@ pcordat <- pcordat1 %>% rbind(pcordat2) %>% rbind(pcordat3) %>% rbind(pcordat4) 
 
 plot_pcor <- ggplot(pcordat, aes(model, compound)) +
   geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() + labs(title = 'Partial correlations with WCRF/AICR score') +
+  scale_fill_gradient2() + #labs(title = 'Partial correlations with WCRF/AICR score') +
   geom_vline(xintercept = 1.5, linetype = "solid") + geom_vline(xintercept = 2.5, linetype = "solid")+ geom_vline(xintercept = 3.5, linetype = "solid")+ geom_vline(xintercept = 4.5, linetype = "solid")+ geom_vline(xintercept = 5.5, linetype = "solid")
 plot_pcor
 
