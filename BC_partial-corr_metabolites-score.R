@@ -1,6 +1,5 @@
 # Case-control breast cancer study
 # partial correlations between score and metabolites
-
 source("BC-prep_data_calc_score.R")
 library(writexl)
 library(broom)
@@ -44,7 +43,7 @@ partialcor3 <- function(x) {
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
 
-#Partial correlation controlling for Fasting + smoking + menopausal status + oral contractpion
+#Partial correlation controlling for Fasting + smoking + menopausal status + oral contraception
 partialcor4 <- function(x) {
   # Linear model of score and confounders
   mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO, data = df.scores[df.scores$score > 0, ])
@@ -54,7 +53,7 @@ partialcor4 <- function(x) {
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
 
-#Partial correlation controlling for Fasting + smoking + menopausal status + oral contractpion + time
+#Partial correlation controlling for Fasting + smoking + menopausal status + oral contraception + time between blood draw and cancer diagnosis
 partialcor5 <- function(x) {
   # Linear model of score and confounders
   mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3, data = df.scores[df.scores$score > 0, ])
@@ -64,8 +63,8 @@ partialcor5 <- function(x) {
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
 
-#Partial correlation controlling for Fasting + smoking + menopausal status + oral contractpion + time (between thawing and analysis ?)+ stocktime
-# + RTH (ration taille/hanche) + diabete + durthsbmb (duree utilisation traitement hormonal)
+#Partial correlation controlling for Fasting + smoking + menopausal status + oral contraception + time (between analysis and diagnosis)+ stocktime
+# + RTH (rapport taille/hanche) + diabete + durthsbmb (duree utilisation traitement hormonal)
 partialcor6 <- function(x) {
   # Linear model of score and confounders
   mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
@@ -75,42 +74,27 @@ partialcor6 <- function(x) {
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
 
-pcorlist9 <- apply(metabolo, 2, partialcor1)
-pcordat9 <- map_dfr(pcorlist1, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-pcordat9
 
 pcorlist1 <- apply(metabolo, 2, partialcor1)
-pcordat1 <- map_dfr(pcorlist1, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% 
-  rename(estimate1= estimate)
 pcorlist2 <- apply(metabolo, 2, partialcor2)
-pcordat2 <- map_dfr(pcorlist2, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% 
-  rename(estimate2= estimate) %>% select(estimate2, compound)
 pcorlist3 <- apply(metabolo, 2, partialcor3)
-pcordat3 <- map_dfr(pcorlist3, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% 
-  rename(estimate3= estimate) %>% select(estimate3, compound)
 pcorlist4 <- apply(metabolo, 2, partialcor4)
-pcordat4 <- map_dfr(pcorlist4, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% 
-  rename(estimate4= estimate) %>% select(estimate4, compound)
 pcorlist5 <- apply(metabolo, 2, partialcor5)
-pcordat5 <- map_dfr(pcorlist5, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% 
-  rename(estimate5= estimate) %>% select(estimate5, compound)
 pcorlist6 <- apply(metabolo, 2, partialcor6)
-pcordat6 <- map_dfr(pcorlist6, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% 
-  rename(estimate6= estimate) %>% select(estimate6, compound)
 
-pcordat <- pcordat1 %>% select(compound, method, estimate1) %>%
-  left_join(pcordat2, by = "compound") %>% left_join(pcordat3, by = "compound") %>% left_join(pcordat4, by = "compound") %>% left_join(pcordat5, by = "compound") %>% left_join(pcordat6, by = "compound") 
-view(head(pcordat)) 
+pcordat1 <- map_dfr(pcorlist1, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 1") #%>% rename(estimate1= estimate)
+pcordat2 <- map_dfr(pcorlist2, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 2")#%>% rename(estimate2= estimate) %>% select(estimate2, compound)
+pcordat3 <- map_dfr(pcorlist3, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 3")#%>% rename(estimate3= estimate) %>% select(estimate3, compound)
+pcordat4 <- map_dfr(pcorlist4, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 4")#%>% rename(estimate4= estimate) %>% select(estimate4, compound)
+pcordat5 <- map_dfr(pcorlist5, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 5")#%>% rename(estimate5= estimate) %>% select(estimate5, compound)
+pcordat6 <- map_dfr(pcorlist6, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 6")#%>% rename(estimate6= estimate) %>% select(estimate6, compound)
 
-#TO DO :
-# trier tous les pcordat dans le meme ordre
-# faire une table avec seulement les "estimate" et le nom des composés
-# peut etre join les tables par "compound" ? 
-# plot la table finale en heatmap
+# Bind all tables
+pcordat <- pcordat1 %>% rbind(pcordat2) %>% rbind(pcordat3) %>% rbind(pcordat4) %>% rbind(pcordat5) %>% rbind(pcordat6)
 
-plot_pcor <- ggplot(pcordat, aes(method, compound)) +
+plot_pcor <- ggplot(pcordat, aes(model, compound)) +
   geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() + labs(title = 'Partial correlations with WCRF/AICR score')
+  scale_fill_gradient2() + labs(title = 'Partial correlations with WCRF/AICR score') +
+  geom_vline(xintercept = 1.5, linetype = "solid") + geom_vline(xintercept = 2.5, linetype = "solid")+ geom_vline(xintercept = 3.5, linetype = "solid")+ geom_vline(xintercept = 4.5, linetype = "solid")+ geom_vline(xintercept = 5.5, linetype = "solid")
 plot_pcor
 
-heatmap(pcordat)
