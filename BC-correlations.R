@@ -26,7 +26,7 @@ corlistSP <- apply(metabolo, 2, simplecorSP)
 
 # Convert to data frame and add compound names, order by correlation
 cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\results_data_tables\\spearman_score_and_metabolites.xlsx") 
+#write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\results_data_tables\\spearman_score_and_metabolites.xlsx") 
 
 
 # Simple correlation for WCRF score - Pearsons correlation
@@ -35,7 +35,7 @@ corlistPE <- apply(metabolo, 2, simplecorPE)
 
 # Convert to data frame and add compound names, order by correlation
 cordatPE <- map_dfr(corlistPE, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\results_data_tables\\pearson_score_and_metabolites.xlsx") 
+#write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\results_data_tables\\pearson_score_and_metabolites.xlsx") 
 
 
 # Plot correlations
@@ -47,7 +47,6 @@ plotSP
 plotPE <- ggplot(cordatPE, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() + labs(title = 'corrélation Pearson simple score WCRF - métabolites')
-plotPE
 
 # WCRF/AICR full score partial correlations with metabolites ---------------------------------------------------------
 
@@ -77,7 +76,7 @@ pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() + labs(title = 'Time-Smk-Menop')
-plot_pcor
+
 
 # Individual score components simple correlations with metabolites ---------------------------------------------------------------------
 
