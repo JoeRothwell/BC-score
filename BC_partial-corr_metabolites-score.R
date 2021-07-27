@@ -6,7 +6,7 @@ library(broom)
 library(corrplot)
 
 # Mutating variables as factor for partial correlations
-df.scores$FASTING <- as.factor(df.scores$FASTING) #fasting status befor blood collection
+df.scores$FASTING <- as.factor(df.scores$FASTING) #fasting status before blood collection
 df.scores$MENOPAUSE <- as.factor(df.scores$MENOPAUSE) #menopausal status
 df.scores$SMK <- as.factor(df.scores$SMK) #smoking status
 df.scores$DIAGSAMPLINGCat3 <- as.factor(df.scores$DIAGSAMPLINGCat3) #time between blood collection and diagnosis
