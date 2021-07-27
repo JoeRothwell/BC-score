@@ -30,7 +30,6 @@ library(broom)
 tablemods <- map_df(modlist, ~tidy(., exponentiate = T, conf.int=T)) %>% filter(term == "score") %>%
   mutate_if(is.numeric, ~round(.,2)) %>% unite(OR.CI, estimate, conf.high, conf.low, sep = "-") %>% 
   add_column(model = ml_names, .before = T)
-tablemods
 
 
 # With score as quartiles 
