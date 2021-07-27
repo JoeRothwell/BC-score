@@ -9,7 +9,7 @@ library(corrplot)
 # Plot of score components correlations (with each other)---------------------------------------------------------------------
 mcor <- cor(table_scores, use = "complete.obs")
 tabcor <- cor(table_componentsFR)
-corrplot(tabcor, tl.col = "black", type = "upper") #,  title = "Corrélations entre les composantes du score")
+corrplot(tabcor, type = "upper", tl.col="black", tl.srt=40,  title = "Corrélations entre les composantes du score", mar=c(0,0,1,0)) #tl.srt changes labels orientation, mar lowers the title
 
 # Modeles lineaire pour vérifier que toutes les composantes du score apportent bien de l'information
 lin_mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
@@ -41,7 +41,7 @@ write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\results_data_tables\\pearson_s
 # Plot correlations
 plotSP <- ggplot(cordatSP, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() + labs(title = 'corrélation Spearman simple score WCRF - métabolites')
+  scale_fill_gradient2() #+ labs(title = 'corrélation Spearman simple score WCRF - métabolites') + theme(plot.title = element_text(hjust = 0.45, vjust=2.12))
 plotSP
 
 plotPE <- ggplot(cordatPE, aes(method, compound)) +
