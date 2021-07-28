@@ -8,13 +8,14 @@ library(grid)
 # Score histograms -----------------------------------------------------------------------
 
 # Score distribution simple histogram
-hist(df.scores$score, xlab = "WCRF/AICR score", main = paste("Scores in the E3N cancer group"), xlim=range(2, 8))
+hist(df.scores$score, xlab = "Score WCRF/AICR",  ylab = "Nombre de participantes", xlim=range(2, 8), main = NULL)
 
 # Score distribution histogram, colors according to status case VS control
 ggplot(table_scores) +
   aes(x = score, fill = CT, xmin = 2, xmax =8) +
   geom_histogram(alpha = 0.5, position = "identity", bins = 22) +
-  labs(x = "WCRF/AICR score", title = "WCRF/AICR scores in the E3N cancer group") 
+  labs(x = "Score WCRF/AICR", y = "Nombre de participantes") +
+  scale_fill_discrete(name = "Statut")
 
 # Test Student for score components ----------------------------------------------------------------------
 
