@@ -191,6 +191,7 @@ cat4_6 <- df.scores$score_cat == 2
 cat6_8 <- df.scores$score_cat == 3
 
 varlist <- c("ID", "SMK", "AGE", "ALCOHOL", "Life_Alcohol_Pattern_1", "CO", "MENOPAUSE", "DIABETE", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "COMHAB1", "comtra1", "COMHAB2", "COMTRAV2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
+varlist2 <- c("SMK", "AGE", "ALCOHOL", "Life_Alcohol_Pattern_1", "CO", "MENOPAUSE", "DIABETE", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "COMHAB1", "comtra1", "COMHAB2", "COMTRAV2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
 
 # table with women with scores from 2 to 4 - only a few variables
 soc2_4 <- df.scores[cat2_4,] %>% transmute_at(vars(varlist), as.factor)
