@@ -9,7 +9,8 @@ library(corrplot)
 # Plot of score components correlations (with each other)---------------------------------------------------------------------
 mcor <- cor(table_scores, use = "complete.obs")
 tabcor <- cor(table_componentsFR)
-corrplot(tabcor, type = "upper", tl.col="black", tl.srt=40,  title = "Corrélations entre les composantes du score", mar=c(0,0,1,0)) #tl.srt changes labels orientation, mar lowers the title
+corrplot(tabcor, type = "upper", tl.col="black", tl.srt=40, mar=c(0,0,1,0),) #title = "Corrélations entre les composantes du score",
+#tl.srt changes labels orientation, mar lowers the title
 
 # Modeles lineaire pour vérifier que toutes les composantes du score apportent bien de l'information
 lin_mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
@@ -20,7 +21,6 @@ lin_mod2 <- lm (score ~ sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.ME
 
 # WCRF/AICR full score simple correlations with metabolites ---------------------------------------------------------------------
 
-# Simple correlation for WCRF score - Spearman correlation
 simplecorSP <- function(x) cor.test(table_scores$score, x, method = "spearman")
 corlistSP <- apply(metabolo, 2, simplecorSP)
 
