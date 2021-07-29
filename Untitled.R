@@ -4,7 +4,7 @@ source("BC-prep_data_calc_score.R")
 source("E3N-prep_data_calc_score.R")
 library(writexl)
 
-# Table for baseline characteristics in breast cancer group
+# Table for baseline characteristics in breast cancer group----------------------------------------------
 baseline <- df.scores %>% select(CT, AGE, bacfemme2, sc.BMI, RTHCat1, sc.PA, SMK, DIABETE, DIAGSAMPLINGCat1, MENOPAUSE, CO, Estriol_vag_or, Estro_THM, Pg_seul, THM_E_Pg, Trait_Horm, allaitement_dureecum, sc.BFD, score, score_cat) %>%
   mutate(bacfemme2=factor(bacfemme2), sc.BMI=factor(sc.BMI), RTHCat1=factor(RTHCat1), sc.PA=factor(sc.PA), SMK=factor(SMK), DIABETE=factor(DIABETE), DIAGSAMPLINGCat1=factor(DIAGSAMPLINGCat1), MENOPAUSE=factor(MENOPAUSE), CO=factor(CO), Estriol_vag_or=factor(Estriol_vag_or), Estro_THM=factor(Estro_THM), Pg_seul=factor(Pg_seul), THM_E_Pg=factor(THM_E_Pg), Trait_Horm=factor(Trait_Horm), sc.BFD=factor(sc.BFD), scorefact=factor(score))
 baselineCTR <- baseline$CT== 0
@@ -33,7 +33,16 @@ scoresCS <- baselineCS_table %>% pull(score)
 sd(scoresCTR)
 sd(scoresCS)
 
-# Table for baseline characteristics in E3N
+#by score category
+CTRcat2_4 <- baselineCTR_table$score_cat == 1
+CTRcat4_6 <- baselineCTR_table$score_cat == 2
+CTRcat6_8 <- baselineCTR_table$score_cat == 3
+
+CScat2_4 <- baselineCS_table$score_cat == 1
+CScat4_6 <- baselineCS_table$score_cat == 2
+CScat6_8 <- baselineCS_table$score_cat == 3
+
+# Table for baseline characteristics in E3N -------------------------------------------------------
 baseline_all0 <- df.scores_all %>% select(ksein, ageq3, bacfemme2, statfin_dquest, score_cat)
 baseline_all <- bind_cols(baseline_all0, table_components_all_factors) %>%
   mutate(ksein=factor(ksein), bacfemme2=factor(bacfemme2), statfin_dquest=factor(statfin_dquest))
