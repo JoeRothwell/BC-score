@@ -21,14 +21,13 @@ fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)
 size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcq3, ttailleq4, taille, ageq3)
 
 # Breast cancer data
-cancer_postmenop <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
-cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, agemeno, ktous, ksein, agefin, ageq3ve, duree_suivi) %>%
+cancer_postmenop <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
+cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, duree_suivi) %>%
   mutate (duree_suivi1 = agefin - ageq3ve)
 # 0 : pre-menopause, 1 to 3 : post-menopause (1 unknown, 2 naturally, 3 artificially)
 
 # Menopause
-menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat")
-#pill <- read_sas("pilule_q1q9.sas7bdat")
+menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat") %>% select(ident, agemeno)
 
 # Smoking
 #smk <- read_sas("D01_20131018_debfinexpo_FR_Q1Q8.sas7bdat") #%>% mutate(ident=IDENT) %>% select(ident, tabacq3)
@@ -124,6 +123,9 @@ df.scores_all0 <- clean_data_all %>%
          # Score by categories (0 pt: score<2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
          score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
          score_cat = score_cat1 + score_cat2 + score_cat3,
+         # Score by other categories (0 pt: score<4, 1pt: 2 <= score < 6, 2pts 6 <= score)
+         score_catbis1 = ifelse(score >= 4, 1, 0), score_catbis2 = ifelse(score >= 6, 1, 0),
+         score_catbis = score_catbis1 + score_catbis2,
          # Determine menopausal status
          menop_status = ifelse(agemeno.x <= ageq3, 1,0)) 
 
@@ -143,6 +145,7 @@ df.scores_all <- df.scores_all0 %>%
 
 # Mutate score quartiles and categories to factors
 df.scores_all$score_cat <- as.factor(df.scores_all$score_cat)
+df.scores_all$score_catbis <- as.factor(df.scores_all$score_catbis)
 df.scores_all$score_quart <- as.factor(df.scores_all$score_quart)
 
 
@@ -161,6 +164,11 @@ rename(BMI=imcq3, Waist_circ=ttailleq4, Physical_act=TotalAPQ3, Fruits_Veg=fruit
 table_components_all_factors <- df.scores_all %>% transmute_at(vars(sc.BMI:score), as.factor)
 
 # For subsetting ---------------------------------------------------------------------
+# by menopausal status
+pre_all <- df.scores_all$menop_status == 0
+post_all <- df.scores_all$menop_status == 1
+
+# by score categories
 cat0_2_all <- df.scores_all$score_cat == 0 
 cat2_4_all <- df.scores_all$score_cat == 1
 cat4_6_all <- df.scores_all$score_cat == 2
