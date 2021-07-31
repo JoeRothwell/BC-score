@@ -16,8 +16,8 @@ mod7 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_o
 
 # Separated pre and post menopausal participants
 # only 173 events, not many pre-menopausal women
-mod8 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estro_THM + Pg_seul +  strata(MATCH), data = df.scores[pre,])
-mod9 <- clogit(CT ~ score + SMK +DIABETE +  RTH + CO + Estriol_vag_or +  Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores[post,])
+mod8 <- clogit(CT ~ score + SMK + DIABETE +  RTH + CO + Estro_THM + Pg_seul +  strata(MATCH), data = df.scores[pre,])
+mod9 <- clogit(CT ~ score + SMK + DIABETE +  RTH + CO + Estriol_vag_or +  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + AGE + strata(MATCH), data = df.scores[post,])
 
 
 # Presenting data in a singular table
