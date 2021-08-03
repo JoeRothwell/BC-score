@@ -7,17 +7,15 @@ library(writexl)
 
 mod1 <- clogit(CT ~ score + strata(MATCH), data = df.scores)
 mod2 <- clogit(CT ~ score + SMK + DIABETE + RTH + strata(MATCH), data = df.scores)
-mod3 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + strata(MATCH), data = df.scores)
-mod4 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
-mod5 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
-mod6 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
-mod7 <- clogit(CT ~ score + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + AGE + strata(MATCH), data = df.scores)
-
+mod3 <- clogit(CT ~ score + SMK + DIABETE + RTH + CO + strata(MATCH), data = df.scores)
+mod4 <- clogit(CT ~ score + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
+mod5 <- clogit(CT ~ score + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
+mod6 <- clogit(CT ~ score + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
 
 # Separated pre and post menopausal participants
 # only 173 events, not many pre-menopausal women
 mod8 <- clogit(CT ~ score + SMK + DIABETE +  RTH + CO + Estro_THM + Pg_seul +  strata(MATCH), data = df.scores[pre,])
-mod9 <- clogit(CT ~ score + SMK + DIABETE +  RTH + CO + Estriol_vag_or +  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + AGE + strata(MATCH), data = df.scores[post,])
+mod9 <- clogit(CT ~ score + SMK + DIABETE +  RTH + CO + Estriol_vag_or +  Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores[post,])
 
 
 # Presenting data in a singular table
@@ -34,17 +32,14 @@ tablemods <- map_df(modlist, ~tidy(., exponentiate = T, conf.int=T)) %>% filter(
 
 
 # With score as quartiles 
-mod4.3 <- clogit(CT ~ score_quart + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + 
+mod4.3 <- clogit(CT ~ score_quart + SMK + DIABETE + RTH + CO + Estriol_vag_or + 
                    Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
 # With score as categories -----------------------------------------------------------------------------------
 # score by categories (0pt: score < 2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
-mod4.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
-mod5.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
-mod6.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
-mod7.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + AGE + KCAL + strata(MATCH), data = df.scores)
-mod7.2bis <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + MENOPAUSE + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + AGE + strata(MATCH), data = df.scores)
-
+mod4.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
+mod5.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
+mod6.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
 
 # Put models in separate lists (separate columns in table)
 modlist_scorecat <- list(mod4.2, mod5.2, mod6.2, mod7.2) #models with score as categories - all participants
