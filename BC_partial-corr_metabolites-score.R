@@ -86,8 +86,12 @@ pcordat1 <- map_dfr(pcorlist1, tidy) %>% bind_cols(compound = colnames(metabolo)
 pcordat2 <- map_dfr(pcorlist2, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 2")#%>% rename(estimate2= estimate) %>% select(estimate2, compound)
 pcordat3 <- map_dfr(pcorlist3, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 3")#%>% rename(estimate3= estimate) %>% select(estimate3, compound)
 pcordat4 <- map_dfr(pcorlist4, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 4")#%>% rename(estimate4= estimate) %>% select(estimate4, compound)
-pcordat5 <- map_dfr(pcorlist5, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 5")#%>% rename(estimate5= estimate) %>% select(estimate5, compound)
-pcordat6 <- map_dfr(pcorlist6, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Mod 6")#%>% rename(estimate6= estimate) %>% select(estimate6, compound)
+pcordat5 <- map_dfr(pcorlist5, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Partielle")#%>% rename(estimate5= estimate) %>% select(estimate5, compound)
+pcordat6 <- map_dfr(pcorlist6, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate) %>% select(estimate, compound) %>% mutate(model="Partielle")#%>% rename(estimate6= estimate) %>% select(estimate6, compound)
+
+simplecorSP <- function(x) cor.test(table_scores$score, x, method = "spearman")
+corlistSP <- apply(metabolo, 2, simplecorSP)
+cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)%>% select(estimate, compound) %>% mutate(model="Simple")
 
 # Bind all tables
 pcordat <- pcordat1 %>% rbind(pcordat2) %>% rbind(pcordat3) %>% rbind(pcordat4) %>% rbind(pcordat5) %>% rbind(pcordat6)
@@ -98,3 +102,10 @@ plot_pcor <- ggplot(pcordat, aes(model, compound)) +
   geom_vline(xintercept = 1.5, linetype = "solid") + geom_vline(xintercept = 2.5, linetype = "solid")+ geom_vline(xintercept = 3.5, linetype = "solid")+ geom_vline(xintercept = 4.5, linetype = "solid")+ geom_vline(xintercept = 5.5, linetype = "solid")
 plot_pcor
 
+
+pcordat2 <- pcordat5 %>% rbind(cordatSP) #%>% rbind(pcordat5)
+plot_pcor2 <- ggplot(pcordat2, aes(model, compound)) +
+  geom_tile(aes(fill = estimate)) +
+  scale_fill_gradient2() + #labs(title = 'Partial correlations with WCRF/AICR score') +
+  geom_vline(xintercept = 1.5, linetype = "solid") 
+plot_pcor2
