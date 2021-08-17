@@ -3,8 +3,8 @@ source("BC-prep_data_calc_score.R")
 library(survival)
 library(writexl)
 
+# Score as a continuous variable (0.25 points increments) -----------------------------------------------------------------------------------
 # Modeles score-breast cancer, stratifiés par appariement cas-témoin (MATCH)
-
 mod1 <- clogit(CT ~ score + strata(MATCH), data = df.scores)
 mod2 <- clogit(CT ~ score + SMK + DIABETE + RTH + strata(MATCH), data = df.scores)
 mod3 <- clogit(CT ~ score + SMK + DIABETE + RTH + CO + strata(MATCH), data = df.scores)
@@ -35,7 +35,7 @@ tablemods <- map_df(modlist, ~tidy(., exponentiate = T, conf.int=T)) %>% filter(
 mod4.3 <- clogit(CT ~ score_quart + SMK + DIABETE + RTH + CO + Estriol_vag_or + 
                    Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 
-# With score as categories -----------------------------------------------------------------------------------
+# Score as categories -----------------------------------------------------------------------------------
 # score by categories (0pt: score < 2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score) 
 mod4.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
 mod5.2 <- clogit(CT ~ score_cat + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
@@ -54,6 +54,12 @@ tablemods_cat0 <- map_df(modlist_scorecat, ~tidy(., exponentiate = T, conf.int=T
 # Creatinga table with relevant data for the last model (mod7.2)
 tablemods_lastmodel <- tidy(mod7.2, exponentiate = T, conf.int=T, conf.level=0.95) %>% filter(term %in% catlist) %>% 
   mutate_if(is.numeric, ~round(.,2)) %>% unite(HR.CI, estimate, conf.low, conf.high, sep = "-") %>% add_column(model = catvalues, .before = T) %>% select(-term)
+
+
+# Score as 1 point increments -----------------------------------------------------------------------------------
+mod4.3 <- clogit(CT ~ score.round + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
+mod5.3 <- clogit(CT ~ score.round + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
+mod6.3 <- clogit(CT ~ score.round + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
 
 
 # Models' summaries --------------------------------------------------------------------------------------------------------
