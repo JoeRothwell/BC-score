@@ -19,34 +19,27 @@ lin_mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF
 lin_mod2 <- lm (score ~ sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD , data = df.scores)
 #summary(lin_mod2)
 
+
 # WCRF/AICR full score simple correlations with metabolites ---------------------------------------------------------------------
 
-simplecorSP <- function(x) cor.test(table_scores$score, x, method = "spearman")
-corlistSP <- apply(metabolo, 2, simplecorSP)
-
+simplecor <- function(x) cor.test(table_scores$score, x, method = "spearman")
+corlist <- apply(metabolo, 2, simplecor)
 # Convert to data frame and add compound names, order by correlation
-cordatSP <- map_dfr(corlistSP, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-#write_xlsx(cordatSP, "C:\\Users\\Clougher\\score\\results_data_tables\\spearman_score_and_metabolites.xlsx") 
+cordat <- map_dfr(corlist, tidy, .id = "feat") %>% 
+  mutate(p.valFDR = p.adjust(p.value, method = "fdr")) %>% select(estimate, p.value, p.valFDR) %>%
+  bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+cordat.sign <- cordat %>% filter(p.value < 0.05) #only compounds with significative p.values
+cordat.signFDR <- cordat %>% filter(p.valFDR < 0.05) #only compounds with significative FDR p.values
 
+#write_xlsx(cordat, "/Users/MacSuzanne/score/results_data_tables/simple_corr_all.xlsx") 
+# Tried with Pearson method as well, similar results. 
+# Keeping Spearman because it excludes outliers and some outliers remain in metabolites data
 
-# Simple correlation for WCRF score - Pearsons correlation
-simplecorPE <- function(x) cor.test(table_scores$score, x, method = "pearson")
-corlistPE <- apply(metabolo, 2, simplecorPE)
-
-# Convert to data frame and add compound names, order by correlation
-cordatPE <- map_dfr(corlistPE, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
-#write_xlsx(cordatPE, "C:\\Users\\Clougher\\score\\results_data_tables\\pearson_score_and_metabolites.xlsx") 
-
-
-# Plot correlations
+# Plot correlation
 plotSP <- ggplot(cordatSP, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() #+ labs(title = 'corrélation Spearman simple score WCRF - métabolites') + theme(plot.title = element_text(hjust = 0.45, vjust=2.12))
-plotSP
 
-plotPE <- ggplot(cordatPE, aes(method, compound)) +
-  geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() + labs(title = 'corrélation Pearson simple score WCRF - métabolites')
 
 # WCRF/AICR full score partial correlations with metabolites ---------------------------------------------------------
 
@@ -58,24 +51,29 @@ df.scores$DIAGSAMPLINGCat3 <- as.factor(df.scores$DIAGSAMPLINGCat3) #time betwee
 df.scores$CO <- as.factor(df.scores$CO) #oral contraceptives
 df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy intake
 
-#Partial correlation controlling for Fasting and smoking status
+#Partial correlation controlling for multiple factors
 partialcor <- function(x) {
   # Linear model of score and confounders
-  mod1 <- lm(score ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3 + CO + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ MENOPAUSE + SMK+ DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH + RTH, data = df.scores[df.scores$score > 0, ])
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
 
 pcorlist <- apply(metabolo, 2, partialcor)
-pcordat <- map_dfr(pcorlist, tidy) %>% bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+pcordat <- map_dfr(pcorlist, tidy, .id = "feat") %>%
+  mutate(p.valFDR = p.adjust(p.value, method = "fdr")) %>% select(estimate, p.value, p.valFDR) %>% #adding adjust p.values (FDR = false discovery rate)
+  bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+pcordat.sign <- pcordat %>% filter(p.value < 0.05) #only compounds with significative p.values
+#not a single compound with an adjusted FDR p.value <0,05
+
 #write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time-smk-menop_newcovar_metab.xlsx") 
-#write_xlsx(pcordat, "Users/MacSuzanne/score/results_data_tables/partial_corr-time.xlsx") 
+write_xlsx(pcordat, "/Users/MacSuzanne/score/results_data_tables/partial_corr.xlsx") 
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() + labs(title = 'Time-Smk-Menop')
+  scale_fill_gradient2() #+ labs(title = 'Time-Smk-Menop')
 
 
 # Individual score components simple correlations with metabolites ---------------------------------------------------------------------
