@@ -3,6 +3,7 @@
 source("E3N-prep_data_calc_score.R")
 library("survival")
 
+# Score as a continuous variable (0.25 points increments) -------------------------------
 # Univariate cox model
 # bacfemme2 = niveau d'education
 # statfin_dquest=statut menopausique a la fin du questionnaire
@@ -19,7 +20,7 @@ tablecox <- map_df(coxmod_list, ~tidy(., exponentiate = T, conf.int=T, conf.leve
   add_column(model = coxmod_names, .before = T)
 
 # Score as categories -------------------------------
-# S0 pt: score<2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score
+# 0 pt: score<2, 1pt: 2 <= score < 4, 2pts: 4 <= score < 6, 3pts: 6 <= score
 
 #score as categories (4 total)
 coxmod1.2 <- coxph(Surv(duree_suivi1, ksein) ~ score_cat, data=df.scores_all)
@@ -55,4 +56,11 @@ coxmod3post <- coxph(Surv(duree_suivi1, ksein) ~ score+ bacfemme2 + menop_status
 coxmod3.3pre <- coxph(Surv(duree_suivi1, ksein) ~ score_catbis + bacfemme2 + menop_status, data = df.scores_all[pre_all,])
 coxmod3.3post <- coxph(Surv(duree_suivi1, ksein) ~ score_catbis + bacfemme2 + menop_status, data = df.scores_all[post_all,])
 
+# Score as 1 point increments -------------------------------
+coxmod1.4 <- coxph(Surv(duree_suivi1, ksein) ~ score.round, data=df.scores_all)
+coxmod2.4 <- coxph(Surv(duree_suivi1, ksein) ~ score.round + bacfemme2, data=df.scores_all)
+coxmod3.4 <- coxph(Surv(duree_suivi1, ksein) ~ score.round + bacfemme2 + menop_status, data=df.scores_all)
 
+# by menopausal status
+coxmod3.4pre <- coxph(Surv(duree_suivi1, ksein) ~ score.round + bacfemme2 + menop_status, data = df.scores_all[pre_all,])
+coxmod3.4post <- coxph(Surv(duree_suivi1, ksein) ~ score.round+ bacfemme2 + menop_status, data = df.scores_all[post_all,])
