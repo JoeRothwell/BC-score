@@ -56,12 +56,6 @@ tablemods_lastmodel <- tidy(mod7.2, exponentiate = T, conf.int=T, conf.level=0.9
   mutate_if(is.numeric, ~round(.,2)) %>% unite(HR.CI, estimate, conf.low, conf.high, sep = "-") %>% add_column(model = catvalues, .before = T) %>% select(-term)
 
 
-# Score as 1 point increments -----------------------------------------------------------------------------------
-mod4.3 <- clogit(CT ~ score.round + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + strata(MATCH), data = df.scores)
-mod5.3 <- clogit(CT ~ score.round + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + strata(MATCH), data = df.scores)
-mod6.3 <- clogit(CT ~ score.round + SMK + DIABETE + RTH + CO + Estriol_vag_or + Estro_THM + Pg_seul + THM_E_Pg + bacfemme2 + KCAL + strata(MATCH), data = df.scores)
-
-
 # Models' summaries --------------------------------------------------------------------------------------------------------
 reg_data <- function(x){
   print(summary(x))
@@ -69,16 +63,3 @@ reg_data <- function(x){
   #write_xlsx(mod_data, "C:\\Users\\Clougher\\score\\results_data_tables\\mod12_summary.xlsx")
   #write_xlsx(mod_data, "/Users/MacSuzanne/score/results_data_tables/mod7_summary.xlsx")
 }
-
-reg_data(mod1)
-reg_data(mod2)
-reg_data(mod3)
-reg_data(mod4)
-reg_data(mod5)
-reg_data(mod6)
-reg_data(mod7)
-reg_data(mod8)
-reg_data(mod9)
-reg_data(mod10)
-reg_data(mod11)
-reg_data(mod12)
