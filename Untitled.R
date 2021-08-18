@@ -43,9 +43,9 @@ CScat4_6 <- baselineCS_table$score_cat == 2
 CScat6_8 <- baselineCS_table$score_cat == 3
 
 # Table for baseline characteristics in E3N -------------------------------------------------------
-baseline_all0 <- df.scores_all %>% select(ksein, ageq3, bacfemme2, statfin_dquest, score_cat)
+baseline_all0 <- df.scores_all %>% select(ksein, ageq3, bacfemme2, menop_status, score_cat)
 baseline_all <- bind_cols(baseline_all0, table_components_all_factors) %>%
-  mutate(ksein=factor(ksein), bacfemme2=factor(bacfemme2), statfin_dquest=factor(statfin_dquest))
+  mutate(ksein=factor(ksein), bacfemme2=factor(bacfemme2), menop_status=factor(menop_status))
   
 cat0_2_all <- df.scores_all$score_cat == 0 
 cat2_4_all <- df.scores_all$score_cat == 1
