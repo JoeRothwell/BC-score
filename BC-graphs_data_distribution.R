@@ -17,6 +17,16 @@ ggplot(table_scores) +
   labs(x = "Score WCRF/AICR", y = "Nombre de participantes") +
   scale_fill_discrete(name = "Statut")
 
+# Plot metabolites distribution --------------------------------------
+normal_distrib <- function (x) {
+  qqnorm(metabolo[,x], main =colnames(metabolo)[x])
+  qqline(metabolo[,x])
+}
+
+n <- ncol(metabolo)
+for(i in c(1:n)){normal_distrib(i)}
+
+
 # Test Student for score components ----------------------------------------------------------------------
 
 # Checking variables normal distribution
