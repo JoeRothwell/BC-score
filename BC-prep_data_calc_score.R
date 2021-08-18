@@ -117,9 +117,7 @@ df.scores0 <- clean_data %>%
          score = sc.BMI + sc.TT + sc.PA + sc.FV + sc.TDF + sc.UPF + sc.MEAT + sc.SD + sc.ALC + sc.BFD,
          # Score by categories (1pt: scor<4, 2pts: 4 < score < 6, 3pts: score > 6) 
          score_cat1 = ifelse(score >= 2, 1, 0), score_cat2 = ifelse(score >= 4, 1, 0), score_cat3 = ifelse(score >= 6, 1, 0),
-         score_cat = score_cat1 + score_cat2 + score_cat3,
-         # Score as 1 point increments (rounded) 
-         score.round = round(score, digits = 0))
+         score_cat = score_cat1 + score_cat2 + score_cat3)
 
 # Create score quartiles and categories -----------------------------------------------------------------------
 
