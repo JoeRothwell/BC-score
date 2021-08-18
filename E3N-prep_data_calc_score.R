@@ -22,7 +22,7 @@ size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcq3, ttailleq4, 
 
 # Breast cancer data
 cancer_postmenop <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
-cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, ageq3ve) %>%
+cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, ageq3ve, statfin_dquest) %>%
   mutate (duree_suivi1 = agefin - ageq3ve)
 # 0 : pre-menopause, 1 to 3 : post-menopause (1 unknown, 2 naturally, 3 artificially)
 
@@ -126,10 +126,8 @@ df.scores_all0 <- clean_data_all %>%
          # Score by other categories (0 pt: score<4, 1pt: 2 <= score < 6, 2pts 6 <= score)
          score_catbis1 = ifelse(score >= 4, 1, 0), score_catbis2 = ifelse(score >= 6, 1, 0),
          score_catbis = score_catbis1 + score_catbis2,
-         # Determine menopausal status
-         menop_status = ifelse(agemeno <= ageq3, 1,0),
-         # Score as 1 point increments (rounded) 
-         score.round = round(score, digits = 0)) 
+         # Determine menopausal status at q3
+         menop_status = ifelse(agemeno <= ageq3, 1,0))
 
 # Create score quartiles and categories -----------------------------------------------------------------------
 
