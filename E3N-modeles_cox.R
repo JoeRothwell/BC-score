@@ -1,7 +1,7 @@
 # E3N cohort
 # Graphs for score distribution and checking variables' distribution
 source("E3N-prep_data_calc_score.R")
-library("survival")
+sulibrary("survival")
 
 # Score as a continuous variable (0.25 points increments) -------------------------------
 # Univariate cox model
