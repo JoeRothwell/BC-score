@@ -127,7 +127,7 @@ df.scores_all0 <- clean_data_all %>%
          score_catbis1 = ifelse(score >= 4, 1, 0), score_catbis2 = ifelse(score >= 6, 1, 0),
          score_catbis = score_catbis1 + score_catbis2,
          # Determine menopausal status at q3
-         menop_status = ifelse(agemeno <= ageq3, 1,0))
+         menop_statusq3 = ifelse(agemeno <= ageq3, 1,0))
 
 # Create score quartiles and categories -----------------------------------------------------------------------
 
@@ -165,8 +165,8 @@ table_components_all_factors <- df.scores_all %>% transmute_at(vars(sc.BMI:score
 
 # For subsetting ---------------------------------------------------------------------
 # by menopausal status
-pre_all <- df.scores_all$menop_status == 0
-post_all <- df.scores_all$menop_status == 1
+pre_all <- df.scores_all$menop_statusq3 == 0
+post_all <- df.scores_all$menop_statusq3 == 1
 
 # by score categories
 cat0_2_all <- df.scores_all$score_cat == 0 
