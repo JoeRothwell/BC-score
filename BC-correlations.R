@@ -9,8 +9,12 @@ library(corrplot)
 # Plot of score components correlations (with each other)---------------------------------------------------------------------
 mcor <- cor(table_scores, use = "complete.obs")
 tabcor <- cor(table_componentsFR)
-corrplot(tabcor, type = "upper", tl.col="black", tl.srt=40, mar=c(0,0,1,0),) #title = "Corrélations entre les composantes du score",
-#tl.srt changes labels orientation, mar lowers the title
+corrplot(tabcor, method = "color", type = "upper", 
+         diag = FALSE,  #remove diagonal
+         tl.col="black", tl.srt=40, tl.cex = 0.9, #change labels color (col), orientation (srt) and size (cex)
+         addCoef.col = "black", #add correlation coefficients
+         number.cex = 0.5, #change correlation coefficients' font size
+         mar=c(0,0,1,0),) #lower the title
 
 # Modeles lineaire pour vérifier que toutes les composantes du score apportent bien de l'information
 lin_mod <- lm (score ~ BMI + TTAILLE + TotalAPQ3 + fruitveg + TDF + percent_aUPF + Rmeat + Pmeat + sugary_drinks + ALCOHOL + allaitement_dureecum, data = df.scores)
@@ -26,7 +30,7 @@ simplecor <- function(x) cor.test(table_scores$score, x, method = "spearman")
 corlist <- apply(metabolo, 2, simplecor)
 # Convert to data frame and add compound names, order by correlation
 cordat <- map_dfr(corlist, tidy, .id = "feat") %>% 
-  mutate(p.valFDR = p.adjust(p.value, method = "fdr")) %>% select(estimate, p.value, p.valFDR) %>%
+  mutate(p.valFDR = p.adjust(p.value, method = "fdr")) %>% select(method, estimate, p.value, p.valFDR) %>%
   bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
 cordat.sign <- cordat %>% filter(p.value < 0.05) #only compounds with significative p.values
 cordat.signFDR <- cordat %>% filter(p.valFDR < 0.05) #only compounds with significative FDR p.values
@@ -36,7 +40,7 @@ cordat.signFDR <- cordat %>% filter(p.valFDR < 0.05) #only compounds with signif
 # Keeping Spearman because it excludes outliers and some outliers remain in metabolites data
 
 # Plot correlation
-plotSP <- ggplot(cordatSP, aes(method, compound)) +
+plot_simplecorr <- ggplot(cordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() #+ labs(title = 'corrélation Spearman simple score WCRF - métabolites') + theme(plot.title = element_text(hjust = 0.45, vjust=2.12))
 
@@ -63,17 +67,33 @@ partialcor <- function(x) {
 
 pcorlist <- apply(metabolo, 2, partialcor)
 pcordat <- map_dfr(pcorlist, tidy, .id = "feat") %>%
-  mutate(p.valFDR = p.adjust(p.value, method = "fdr")) %>% select(estimate, p.value, p.valFDR) %>% #adding adjust p.values (FDR = false discovery rate)
-  bind_cols(compound = colnames(metabolo)) %>% arrange(-estimate)
+  mutate(p.valFDR = p.adjust(p.value, method = "fdr")) %>% 
+  select(method, estimate, p.value, p.valFDR) %>% #adding adjust p.values (FDR = false discovery rate)
+  bind_cols(compound = colnames(metabolo)) %>% 
+  arrange(-estimate)
+
 pcordat.sign <- pcordat %>% filter(p.value < 0.05) #only compounds with significative p.values
 #not a single compound with an adjusted FDR p.value <0,05
 
 #write_xlsx(pcordat, "C:\\Users\\Clougher\\score\\results_data_tables\\partial_corr-time-smk-menop_newcovar_metab.xlsx") 
-write_xlsx(pcordat, "/Users/MacSuzanne/score/results_data_tables/partial_corr.xlsx") 
+#write_xlsx(pcordat, "/Users/MacSuzanne/score/results_data_tables/partial_corr.xlsx") 
 
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
-  scale_fill_gradient2() #+ labs(title = 'Time-Smk-Menop')
+  geom_text(aes(label = estimate)) +
+  scale_fill_gradientn(colors, values = values)
+
+# Plot heatmap partial VS simple correlation 
+pcordat_forplot <- pcordat %>% select(estimate, compound) %>% mutate(model="Partielle") # select only estimates and correlation type
+cordat_forplot <- cordat %>% select(estimate, compound) %>% mutate(model="Simple")
+cor_and_pcordat <- cordat_forplot %>% rbind(pcordat_forplot) # bind simple and partial corr data
+cor_and_pcordat$model <- factor(cor_and_pcordat$model, levels = c("Simple", "Partielle")) # reorder model names for plot x axis order (since defaut = alphabetical)
+
+plot_cor_and_pcor <- ggplot(cor_and_pcordat, aes(model, compound)) +
+  geom_tile(aes(fill = estimate)) +
+  scale_fill_gradient2() + 
+  geom_vline(xintercept = 1.5, linetype = "solid") +
+  xlab("Type de correlation") + ylab("Metabolite") 
 
 
 # Individual score components simple correlations with metabolites ---------------------------------------------------------------------
