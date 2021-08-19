@@ -18,7 +18,8 @@ ggplot(df.scores_all) +
 
 # Score components correlations---------------------------------------------------------------------
 tabcor_all <- cor(table_components_all)
-corrplot(tabcor_all,  type = "upper", tl.col="black", tl.srt=40,  title = "Corrélations entre les composantes du score", mar=c(0,0,1,0)) #, title = "Score components correlations-E3N cohort")
+corrplot(tabcor_all,  method = "color",type = "upper", diag = FALSE,tl.col="black", tl.srt = 40,  
+         title = "Corrélations entre les composantes du score", mar=c(0,0,1,0)) #, title = "Score components correlations-E3N cohort")
  #tl.srt changes labels orientation, mar lowers the title
 
 
