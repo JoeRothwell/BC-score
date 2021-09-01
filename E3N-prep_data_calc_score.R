@@ -29,10 +29,6 @@ cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dt
 # Menopause
 menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat") %>% select(ident, agemeno)
 
-# Smoking
-#smk <- read_sas("D01_20131018_debfinexpo_FR_Q1Q8.sas7bdat") #%>% mutate(ident=IDENT) %>% select(ident, tabacq3)
-# table only contains info on 32730 observations, too small
-
 # Education
 educ <- read_sas("D01_20180914_niveau_etudes_Q1.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, bacfemme2)
 
@@ -73,10 +69,10 @@ data_xnames_sums_all <- data_xnames_all %>%
   mutate (percent_aUPF = (aUPF/total_food) *100) #percent of aUPF in total food intake (g/day)
 
 # Checking and cleaning missing data -----------------------------------------------------------------------
-# Concerns BMI, waist circumference and breastfeeding 
 #length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
 #length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
 #length(which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
+# no data missing for the other categories necessary for score
 
 clean_data_all1 <- data_xnames_sums_all %>% filter(!is.na(ttailleq4))
 clean_data_all2 <- clean_data_all1 %>% filter(!is.na(imcq3))
@@ -181,7 +177,3 @@ cat6_8_all <- df.scores_all$score_cat == 3
 #soc2_4_all <- df.scores_all[cat2_4_all,] %>% transmute_at(vars(varlist_all), as.factor)
 #soc4_6_all <- df.scores_all[cat4_6_all,] %>% transmute_at(vars(varlist_all), as.factor)
 #soc6_8_all <- df.scores_all[cat6_8_all,] %>% transmute_at(vars(varlist_all), as.factor)
-
-# Number of participants per score value and category
-#summary(as.factor(df.scores_all$score))
-#summary(as.factor(df.scores_all$score_cat))
