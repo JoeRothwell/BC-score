@@ -164,12 +164,10 @@ matrixCS <- table_scores %>% filter (CT == "Cases") %>% select(-CT) %>% data.mat
 score_decompCTR <- df.scores %>%
   filter (CT == 0) %>%
   transmute_at(vars(sc.BMI:score), as.factor) #easy way to select only the needed variables and mutate them into factors
-#summary(score_decompCTR)
 
 score_decompCS <- df.scores %>%
   filter (CT == 1) %>%
   transmute_at(vars(sc.BMI:score), as.factor)
-#summary(score_decompCS)
 
 
 # For subsetting ---------------------------------------------------------------------
@@ -191,7 +189,6 @@ cat4_6 <- df.scores$score_cat == 2
 cat6_8 <- df.scores$score_cat == 3
 
 varlist <- c("ID", "SMK", "AGE", "ALCOHOL", "Life_Alcohol_Pattern_1", "CO", "MENOPAUSE", "DIABETE", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "COMHAB1", "comtra1", "COMHAB2", "COMTRAV2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
-varlist2 <- c("SMK", "AGE", "ALCOHOL", "Life_Alcohol_Pattern_1", "CO", "MENOPAUSE", "DIABETE", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "COMHAB1", "comtra1", "COMHAB2", "COMTRAV2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
 
 # table with women with scores from 2 to 4 - only a few variables
 soc2_4 <- df.scores[cat2_4,] %>% transmute_at(vars(varlist), as.factor)
@@ -207,8 +204,6 @@ soc6_8 <- df.scores[cat6_8,] %>% transmute_at(vars(varlist), as.factor)
 # Get metabolomics data (unscaled)
 ints <- read_tsv("1510_XMetaboliteE3N_cpmg_unscaled.txt") #contains the whole group
 ints_clean <- ints[-rows_missing_data,] #remove rows where data was missing for the score
-#ints.ctrl <- ints[meta$CT == 0, ] #contains only the 790 controls
-#ints.cases <- ints[meta$CT == 1, ] #contains only the cases
 
 # Scale to unit variance
 metabolo <- scale(ints_clean)
