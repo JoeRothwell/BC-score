@@ -64,7 +64,7 @@ pcorSUGD <- function(x) { #Partial correlation for sugary drinks
   mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH + RTH, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
-pcorALC <- function(x) { #Partial correlation for walcohol
+pcorALC <- function(x) { #Partial correlation for alcohol
   mod1 <- lm(ALCOHOL ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
   mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH + RTH, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
