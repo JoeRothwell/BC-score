@@ -15,7 +15,7 @@ bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident 
 # Physical activity data 
 physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT) %>% select(ident, TotalAPQ3) 
 
-# Correspondence ident-COBBMB
+# Correspondence ident-CODBMB
 id <- read_xls("E3N_cancer du sein_21072014.xls") %>% mutate(ident = IDENT) %>% select(c("CODBMB", "ident"))
 
 # Fiber data
