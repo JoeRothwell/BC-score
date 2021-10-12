@@ -2,7 +2,9 @@
 title: "BC-baseline_char_table"
 author: "Suzanne Clougher"
 date: "10/10/2021"
-output: word_document
+output:
+  pdf_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -10,9 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-```{r pressure, echo=FALSE}
 
-# Generate R markdown for baseline characteristics table
+```{r, echo=FALSE}
 # Source prep data to remove the 10 subjects not matched on menopausal status
 source("BC-prep_data_calc_score.R")
 library(haven)
@@ -52,21 +53,18 @@ table_char0 <- df.scores %>% select(CODBMB, ID, CT,   # case-control status
 
 table_char <- table_char0 %>% 
   mutate(AGEdiag = AGE + DIAGSAMPLING) %>%
-  mutate_at(vars(-AGE, -AGEdiag, -STOCKTIME, -ALCOHOL, -DURTHSBMB, -CODBMB, 
-                 -TotalAPQ3, -fruitveg, -TDF, -percent_aUPF, -Rmeat, -Pmeat,  -sugary_drinks,
-                 -allaitement_dureecum), as.factor) %>%
-  mutate(BMICat3 = )
+  mutate_at(vars(-AGE, -AGEdiag, -STOCKTIME, -ALCOHOL, -DURTHSBMB, -CODBMB), as.factor)
 
-
-# Not sure what to do with this -----------------------
+# Not sure what to do with this 
 # For reviewers comments: get duration of OC use
-table()
-meta1 <- meta %>% left_join(oc, by = "IDENT")
+#table()
+#table_char1 <- table_char %>% left_join(oc, by = "IDENT")
 
 # Check how many pairs have duration of OC data
-meta1$durOC <- ifelse(is.na(meta1$totduroc), 0, 1)
-# --------------------------------------------
+#table_char1$durOC <- ifelse(is.na(table_char1$totduroc), 0, 1)
+```
 
+```{r, echo=FALSE}
 library(kableExtra)
 library(qwraps2)
 options(qwraps2_markup = "markdown")
@@ -81,7 +79,8 @@ summ <-list(#"Total subjects"                  = list("N"   =   ~ n()),
      
      "Follow-up time to cancer diagnosis" =
        list("5 years or less"   =  ~ n_perc0(DIAGSAMPLINGCat1 == 1, digits = 1),
-            "More than five years"  =  ~ n_perc0(DIAGSAMPLINGCat1 == 2, digits = 1)),
+            "More than five years"  =  ~ n_perc0(DIAGSAMPLINGCat1 == 2, digits = 1),
+            "Unknown"                 =  ~ n_perc0(is.na(DIAGSAMPLINGCat1), digits = 1)),
        
      "BMI (kg/m2)" =    
         list("18.5 - 24.9"   =  ~ n_perc0(sc.BMI == 0.5, na_rm = T, digits = 1),
@@ -126,11 +125,6 @@ summ <-list(#"Total subjects"                  = list("N"   =   ~ n()),
               "Hypertension"    =  ~ n_perc0(BP == 1, na_rm = T, digits = 1),
               "Unknown"  =  ~ n_perc0(is.na(BP), digits = 1)),
      
-     "Previous breastfeeding" =
-       list("Yes" =   ~ n_perc0(allaitement == 1, na_rm = T, digits = 1),
-            "No" =   ~ n_perc0(allaitement == 0, na_rm = T, digits = 0),
-            "Unknown"  =  ~ n_perc0(is.na(allaitement), digits = 1)),
-       
      "Previous oral contraceptive use" =
         list("Yes" = ~ n_perc0(CO == 1, digits = 1),
               "No" = ~ n_perc0(CO == 0, digits = 1)),
@@ -153,7 +147,7 @@ summ <-list(#"Total subjects"                  = list("N"   =   ~ n()),
      "Physical activity (MET h/day)" =
        list("<9.375" =  ~ n_perc0(sc.PA == 1, na_rm = T, digits = 1),
             "9.375-18.75" =  ~ n_perc0(sc.PA == 0.5, na_rm = T, digits = 1),
-            ">18.75" =  ~ n_perc0(sc.P1 == 0, na_rm = T, digits = 1)),     
+            ">18.75" =  ~ n_perc0(sc.PA == 0, na_rm = T, digits = 1)),     
      
      "Fruits and vegetables (g/day)" =
        list(">=400" =  ~ n_perc0(sc.FV == 0.5, na_rm = T, digits = 1),
@@ -183,26 +177,24 @@ summ <-list(#"Total subjects"                  = list("N"   =   ~ n()),
       "Exclusively breastfeed over lifetime for a total of"  =
        list("6+ months" =  ~ n_perc0(sc.BFD == 1, na_rm = T, digits = 1),
             ">0-<6 months" =  ~ n_perc0(sc.BFD == 0.5, na_rm = T, digits = 1),
-            "Never" =  ~ n_perc0(sc.BFD == 0, na_rm = T, digits = 1)),       
-)
+            "Never" =  ~ n_perc0(sc.BFD == 0, na_rm = T, digits = 1))
+     )
+```
 
-  # By case-control status
-st <- meta %>% group_by(CT) %>% summary_table(summ)
-print(st, cnames = c("Controls (N=791)", "Cases (N=791)"))
+```{r, echo=FALSE}
+# By case-control status
+status <- table_char %>% group_by(CT) %>% summary_table(summ)
+print(status, cnames = c("Controls (N=764)", "Cases (N=770)"))
 
 # By case-control and menopausal status (for reviewers)
-st <- meta %>% group_by(CT, MENOPAUSE) %>% summary_table(summ)
-print(st, cnames = c("Pre, controls (N=180)", "Pre, cases (N=179)", 
-                     "Post, controls (N=611)", "Post, cases (N=612)"))
+status2 <- table_char %>% group_by(CT, MENOPAUSE) %>% summary_table(summ)
+print(status2, cnames = c("Pre, controls (N=170)", "Pre, cases (N=173)", 
+                     "Post, controls (N=594)", "Post, cases (N=597)"))
 # Copy and paste output into table1_bc_ms.Rmd and render to word/pdf etc
+```
 
-
-# Automatic (can't make work properly)
-#summ <- meta0 %>% qsummary(., numeric_summaries = list("Mean (SD)" = "~ mean_sd(%s)"),
-#                                   n_perc_args = list(digits = 1, show_symbol = T))
-
-
-# Table of tumour characteristics by menopausal status
+```{r, echo=FALSE}
+# Table of tumor characteristics by menopausal status
 summ1 <-
   list("Age at diagnosis" =
       list("Mean (SD)" =  ~ mean_sd(AGEdiag, na_rm = T, digits = 1)),
@@ -210,7 +202,8 @@ summ1 <-
     "Time between sampling and diagnosis" =
       
       list("5 years or less"   =  ~ n_perc0(DIAGSAMPLINGCat1 == 1, na_rm = T, digits = 1),
-           "More than 5 years" =  ~ n_perc0(DIAGSAMPLINGCat1 == 2, na_rm = T, digits = 1)),
+           "More than 5 years" =  ~ n_perc0(DIAGSAMPLINGCat1 == 2, na_rm = T, digits = 1),
+           "Unknown"                 =  ~ n_perc0(is.na(DIAGSAMPLINGCat1), digits = 1)),
     
     "Tumor behavior" =
       
@@ -255,54 +248,69 @@ summ1 <-
            "Unknown"  =  ~ n_perc0(is.na(STADE), digits = 1))
     
   )
+```
 
-st1 <- meta %>% #filter(CT == 1) %>% group_by(MENOPAUSE) %>% 
+```{r, echo=FALSE}
+status1 <- table_char %>%  
   summary_table(summ1)
-print(st1)
-print(st1, cnames = c("Pre-menopausal", "Post-menopausal"))
+print(status1)
 
-# ---------------------------------------------------------------
+status1_menop <- table_char %>% filter(CT == 1) %>% group_by(MENOPAUSE) %>% 
+  summary_table(summ1)
+print(status1_menop, cnames = c("Pre-menopausal", "Post-menopausal"))
+```
 
+
+```{r, echo=FALSE}
 # Models for p-values for table
 # Chi-sq and wilcox test
-chisq.test(meta$CT, meta$RTHCat1)$p.value
-chisq.test(meta$CT, meta$BMICat1)$p.value
-chisq.test(meta$CT, meta$SMK)$p.value
-chisq.test(meta$CT, meta$DIABETE)$p.value
-chisq.test(meta$CT, meta$BP)$p.value
-chisq.test(meta$CT, meta$Life_Alcohol_Pattern_1)$p.value
-chisq.test(meta$CT, meta$Trait_Horm)$p.value
-chisq.test(meta$CT, meta$allaitement)$p.value
-chisq.test(meta$CT, meta$CO)$p.value
-wilcox.test(meta$ALCOHOL ~ meta$CT, paired = T)$p.value
-wilcox.test(meta$DURTHSBMB ~ meta$CT, paired = T)$p.value
-wilcox.test(meta$STOCKTIME ~ meta$CT, paired = T)$p.value
+chisq.test(table_char$CT, table_char$sc.BMI)$p.value
+chisq.test(table_char$CT, table_char$sc.TT)$p.value
+chisq.test(table_char$CT, table_char$RTHCat1)$p.value
+chisq.test(table_char$CT, table_char$SMK)$p.value
+chisq.test(table_char$CT, table_char$DIABETE)$p.value
+chisq.test(table_char$CT, table_char$Life_Alcohol_Pattern_1)$p.value
+chisq.test(table_char$CT, table_char$sc.ALC)$p.value
+chisq.test(table_char$CT, table_char$BP)$p.value
+chisq.test(table_char$CT, table_char$CO)$p.value
+chisq.test(table_char$CT, table_char$Trait_Horm)$p.value
+chisq.test(table_char$CT, table_char$FASTING)$p.value
+chisq.test(table_char$CT, table_char$sc.PA)$p.value
+chisq.test(table_char$CT, table_char$sc.FV)$p.value
+chisq.test(table_char$CT, table_char$sc.TDF)$p.value
+chisq.test(table_char$CT, table_char$sc.UPF)$p.value
+chisq.test(table_char$CT, table_char$sc.MEAT)$p.value
+chisq.test(table_char$CT, table_char$sc.SD)$p.value
+chisq.test(table_char$CT, table_char$sc.BFD)$p.value
+# Wilcox tests not <orking
+#wilcox.test(table_char$ALCOHOL ~ table_char$CT, paired = T)$p.value  
+#wilcox.test(table_char$DURTHSBMB ~ table_char$CT, paired = T)$p.value
+#wilcox.test(table_char$STOCKTIME ~ table_char$CT, paired = T)$p.value
 
 # McNemar test for binaries
-mcnemar.test(meta$CT, meta$SMK)
-mcnemar.test(meta$CT, meta$DIABETE)
-mcnemar.test(meta$CT, meta$CO)
-mcnemar.test(meta$CT, meta$allaitement)
+mcnemar.test(table_char$CT, table_char$SMK)
+mcnemar.test(table_char$CT, table_char$DIABETE)
+mcnemar.test(table_char$CT, table_char$CO)
 
 # MHT use only in post-menopausal
-meta.post <- meta[ meta$MENOPAUSE == 1, ]
-chisq.test(meta.post$CT, meta.post$Trait_Horm)$p.value
-wilcox.test(meta.post$DURTHSBMB ~ meta.post$CT)$p.value
+table_char.post <- table_char[ table_char$MENOPAUSE == 1, ]
+chisq.test(table_char.post$CT, table_char.post$Trait_Horm)$p.value
+wilcox.test(table_char.post$DURTHSBMB ~ table_char.post$CT)$p.value
 
 # Pre/post menopausal models
-chisq.test(meta$MENOPAUSE, meta$DIAGSAMPLINGCat1)$p.value
-chisq.test(meta$MENOPAUSE, meta$BEHAVIOUR)$p.value
-fisher.test(meta$MENOPAUSE, meta$SUBTYPE)$p.value
-chisq.test(meta$MENOPAUSE, meta$ER)$p.value
-chisq.test(meta$MENOPAUSE, meta$PR)$p.value
-chisq.test(meta$MENOPAUSE, meta$GRADE)$p.value
-fisher.test(meta$MENOPAUSE, meta$STADE)$p.value
+chisq.test(table_char$MENOPAUSE, table_char$DIAGSAMPLINGCat1)$p.value
+chisq.test(table_char$MENOPAUSE, table_char$BEHAVIOUR)$p.value
+fisher.test(table_char$MENOPAUSE, table_char$SUBTYPE)$p.value
+chisq.test(table_char$MENOPAUSE, table_char$ER)$p.value
+chisq.test(table_char$MENOPAUSE, table_char$PR)$p.value
+chisq.test(table_char$MENOPAUSE, table_char$GRADE)$p.value
+fisher.test(table_char$MENOPAUSE, table_char$STADE)$p.value
 
 
 
 # Identification of triple negative cases
-#sum(meta$CERB2 == 0 & meta$ER == 0 & meta$PR == 0, na.rm = T)
-#sum(meta$ER == 0 & meta$PR == 0, na.rm = T)
+#sum(table_char$CERB2 == 0 & table_char$ER == 0 & table_char$PR == 0, na.rm = T)
+#sum(mtable_char$ER == 0 & table_char$PR == 0, na.rm = T)
 ```
 
 
