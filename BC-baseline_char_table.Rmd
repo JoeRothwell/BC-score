@@ -3,8 +3,8 @@ title: "BC-baseline_char_table"
 author: "Suzanne Clougher"
 date: "10/10/2021"
 output:
-  pdf_document: default
   word_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
