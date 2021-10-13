@@ -120,7 +120,8 @@ all_dat$model <- factor(all_dat$score_component, levels = c("BMI", "PWaist circu
 plot_allcor <- ggplot(all_dat, aes(score_component, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() + 
-  xlab("Score component") + ylab("Metabolite") 
+  xlab("Score component") + ylab("Metabolite") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 plot_allcor
 
 #only compounds with significative p.values
