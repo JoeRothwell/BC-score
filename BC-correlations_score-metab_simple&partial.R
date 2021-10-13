@@ -21,7 +21,7 @@ cordat.signFDR <- cordat %>% filter(p.valFDR < 0.05) #only compounds with signif
 # Tried with Pearson method as well, similar results. 
 # Keeping Spearman because it excludes outliers and some outliers remain in metabolites data
 
-# Plot correlation
+# Plot simple correlation between score and metabolites
 plot_simplecorr <- ggplot(cordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() #+ labs(title = 'corrélation Spearman simple score WCRF - métabolites') + theme(plot.title = element_text(hjust = 0.45, vjust=2.12))
@@ -30,19 +30,18 @@ plot_simplecorr <- ggplot(cordat, aes(method, compound)) +
 # WCRF/AICR full score partial correlations with metabolites ---------------------------------------------------------
 
 # Mutating variables as factor for partial correlations
-df.scores$FASTING <- as.factor(df.scores$FASTING) #fasting status befor blood collection
+df.scores$FASTING <- as.factor(df.scores$FASTING) #fasting status before blood collection
 df.scores$MENOPAUSE <- as.factor(df.scores$MENOPAUSE) #menopausal status
 df.scores$SMK <- as.factor(df.scores$SMK) #smoking status
-df.scores$DIAGSAMPLINGCat3 <- as.factor(df.scores$DIAGSAMPLINGCat3) #time between blood collection and diagnosis
 df.scores$CO <- as.factor(df.scores$CO) #oral contraceptives
 df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy intake
 
 #Partial correlation controlling for multiple factors
 partialcor <- function(x) {
   # Linear model of score and confounders
-  mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + DIAGSAMPLINGCat3 + STOCKTIME + DURTHSBMB + DIABETE + RTH + RTH, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
@@ -57,10 +56,10 @@ pcordat <- map_dfr(pcorlist, tidy, .id = "feat") %>%
 pcordat.sign <- pcordat %>% filter(p.value < 0.05) #only compounds with significative p.values
 #not a single compound with an adjusted FDR p.value <0,05
 
+# Plot partial correlations between full score and metabolites
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
   geom_tile(aes(fill = estimate)) +
-  geom_text(aes(label = estimate)) +
-  scale_fill_gradientn(colors, values = values)
+  geom_text(aes(label = estimate)) #+ scale_fill_gradientn(colors, values = values)
 
 # Plot heatmap partial VS simple correlation 
 pcordat_forplot <- pcordat %>% select(estimate, compound) %>% mutate(model="Partielle") # select only estimates and correlation type
