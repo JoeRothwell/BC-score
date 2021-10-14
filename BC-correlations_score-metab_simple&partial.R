@@ -39,9 +39,9 @@ df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy in
 #Partial correlation controlling for multiple factors
 partialcor <- function(x) {
   # Linear model of score and confounders
-  mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(score ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")
 }
