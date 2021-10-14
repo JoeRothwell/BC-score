@@ -53,8 +53,8 @@ pcordat <- map_dfr(pcorlist, tidy, .id = "feat") %>%
   bind_cols(compound = colnames(metabolo)) %>% 
   arrange(-estimate)
 
-pcordat.sign <- pcordat %>% filter(p.value < 0.05) #only compounds with significative p.values
-#not a single compound with an adjusted FDR p.value <0,05
+pcordat.sign <- pcordat %>% filter(p.value < 0.05) # 33 compounds with significative p.values
+pcordat.signFDR <- pcordat %>% filter(p.valFDR < 0.05) # 19 compounds with FDR p.value <0,05
 
 # Plot partial correlations between full score and metabolites
 plot_pcor <- ggplot(pcordat, aes(method, compound)) +
