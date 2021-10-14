@@ -12,66 +12,66 @@ df.scores$CO <- as.factor(df.scores$CO) #oral contraceptives
 df.scores$DIABETE <- as.factor(df.scores$DIABETE) #total non-alcoholic energy intake
 
 # Confounding variables used : Fasting + smoking + menopausal status + oral contraception + stocktime 
-# + diabete + durthsbmb (duree utilisation traitement hormonal)
+# + durthsbmb (duree utilisation traitement hormonal)
 
 #Partial correlation for BMI
 pcorBMI <- function(x) {
   # Linear model of score and confounders
-  mod1 <- lm(BMI ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(BMI ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   # Linear model of metabolites and confounders
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   # Correlate the two sets of residuals              
   cor.test(residuals(mod1), residuals(mod2), method = "spearman") }
 
 
 pcorTTAILLE <- function(x) { #Partial correlation for waist circumference
-  mod1 <- lm(TTAILLE ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(TTAILLE ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman") }
 
 pcorPHYS <- function(x) { #Partial correlation for physical activity
-  mod1 <- lm(TotalAPQ3 ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(TotalAPQ3 ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman") }
 
 pcorFV <- function(x) { #Partial correlation for fruits and vegetables
-  mod1 <- lm(fruitveg ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(fruitveg ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman") }
 
 pcorFIBRE <- function(x) { #Partial correlation for fiber
-  mod1 <- lm(TDF ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(TDF ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 pcorUPF <- function(x) { #Partial correlation for aUPF
-  mod1 <- lm(percent_aUPF ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(percent_aUPF ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 pcorRMEAT <- function(x) { #Partial correlation for red meat
-  mod1 <- lm(Rmeat ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(Rmeat ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 pcorPMEAT <- function(x) { #Partial correlation for processed meat
-  mod1 <- lm(Pmeat ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(Pmeat ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 pcorSUGD <- function(x) { #Partial correlation for sugary drinks
-  mod1 <- lm(sugary_drinks ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(sugary_drinks ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 pcorALC <- function(x) { #Partial correlation for alcohol
-  mod1 <- lm(ALCOHOL ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(ALCOHOL ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 pcorBFEED <- function(x) { #Partial correlation for breastfeeding
-  mod1 <- lm(allaitement_dureecum ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
-  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB + DIABETE, data = df.scores[df.scores$score > 0, ])
+  mod1 <- lm(allaitement_dureecum ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
+  mod2 <- lm(x ~ FASTING + SMK + MENOPAUSE + CO + STOCKTIME + DURTHSBMB, data = df.scores[df.scores$score > 0, ])
   cor.test(residuals(mod1), residuals(mod2), method = "spearman")}
 
 # Calculate correlations
@@ -112,7 +112,7 @@ pcorBFEED_dat <- cordat(pcorBFEED_list) %>% mutate(score_component="Breastfeedin
 all_dat <- pcorBMI_dat %>% rbind(pcorTTAILLE_dat) %>% rbind(pcorPHYS_dat) %>% rbind(pcorFV_dat) %>% 
   rbind(pcorFIBRE_dat) %>% rbind(pcorUPF_dat) %>% rbind(pcorRMEAT_dat) %>% rbind(pcorPMEAT_dat) %>%
   rbind(pcorSUGD_dat) %>% rbind(pcorALC_dat) %>% rbind(pcorBFEED_dat)
-all_dat$model <- factor(all_dat$score_component, levels = c("BMI", "PWaist circumference", "Physical activity", "Fruits and vegetables",
+all_dat$model <- factor(all_dat$score_component, levels = c("BMI", "Waist circumference", "Physical activity", "Fruits and vegetables",
                                                   "Fibre", "aUPF", "Red meat", "Processed meat",
                                                   "Sugary drinks", "Alcohol", "Breastfeeding")) # reorder model names for plot x axis order (since default = alphabetical)
 
