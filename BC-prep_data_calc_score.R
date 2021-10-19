@@ -155,6 +155,11 @@ table_componentsFR <- df.scores %>% select (score_varlist) %>%
   rename (IMC = BMI, "Tour de taille"=TTAILLE, "Activite physique"=TotalAPQ3, "Fruits et legumes"=fruitveg, "Fibres"=TDF, 
           "AUTa"=percent_aUPF, "Viande rouge"=Rmeat, "Viande transformee"=Pmeat, "Boissons sucrees"=sugary_drinks, "Alcool"=ALCOHOL, "Allaitement"=allaitement_dureecum)
 
+table_componentsEN <- df.scores %>% select (score_varlist) %>%
+  rename ("Waist circumference"=TTAILLE, "Physical activity"=TotalAPQ3, "Fruits & vegetables"=fruitveg, "Fibre"=TDF, 
+          "aUPF"=percent_aUPF, "Red meat"=Rmeat, "Processed meat"=Pmeat, "Sugar-sweetened drinks"=sugary_drinks, "Alcohol"=ALCOHOL, "Breastfeeding"=allaitement_dureecum)
+
+
 # Matrix containing score information
 matrix_scores <- data.matrix(table_scores)
 matrixCTR <- table_scores %>% filter (CT == "Controls") %>% select(-CT) %>% data.matrix
