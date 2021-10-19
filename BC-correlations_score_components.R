@@ -6,7 +6,7 @@ library(corrplot)
 
 # Plot of score components correlations (with each other)
 mcor <- cor(table_scores, use = "complete.obs")
-tabcor <- cor(table_componentsFR)
+tabcor <- cor(table_componentsEN)
 corrplot(tabcor, method = "color", type = "upper", 
          diag = FALSE,  #remove diagonal
          tl.col="black", tl.srt=40, tl.cex = 0.9, #change labels color (col), orientation (srt) and size (cex)
