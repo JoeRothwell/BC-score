@@ -104,7 +104,7 @@ pcorFIBRE_dat <- cordat(pcorFIBRE_list) %>% mutate(score_component="Fibre")
 pcorUPF_dat <- cordat(pcorUPF_list) %>% mutate(score_component="aUPF")
 pcorRMEAT_dat <- cordat(pcorRMEAT_list) %>% mutate(score_component="Red meat")
 pcorPMEAT_dat <- cordat(pcorPMEAT_list) %>% mutate(score_component="Processed meat")
-pcorSUGD_dat <- cordat(pcorSUGD_list) %>% mutate(score_component="Sugary drinks")
+pcorSUGD_dat <- cordat(pcorSUGD_list) %>% mutate(score_component="Sugar-sweetened drinks")
 pcorALC_dat <- cordat(pcorALC_list) %>% mutate(score_component="Alcohol")
 pcorBFEED_dat <- cordat(pcorBFEED_list) %>% mutate(score_component="Breastfeeding")
 
@@ -112,12 +112,13 @@ pcorBFEED_dat <- cordat(pcorBFEED_list) %>% mutate(score_component="Breastfeedin
 all_dat <- pcorBMI_dat %>% rbind(pcorTTAILLE_dat) %>% rbind(pcorPHYS_dat) %>% rbind(pcorFV_dat) %>% 
   rbind(pcorFIBRE_dat) %>% rbind(pcorUPF_dat) %>% rbind(pcorRMEAT_dat) %>% rbind(pcorPMEAT_dat) %>%
   rbind(pcorSUGD_dat) %>% rbind(pcorALC_dat) %>% rbind(pcorBFEED_dat)
-all_dat$model <- factor(all_dat$score_component, levels = c("BMI", "Waist circumference", "Physical activity", "Fruits and vegetables",
-                                                  "Fibre", "aUPF", "Red meat", "Processed meat",
-                                                  "Sugary drinks", "Alcohol", "Breastfeeding")) # reorder model names for plot x axis order (since default = alphabetical)
+# reorder model names for plot x axis order (since default = alphabetical)
+all_dat_order <- all_dat %>% mutate(score_component = fct_relevel(score_component, "Waist circumference", "BMI", "Alcohol", "Breastfeeding", "Processed meat",
+                                                                  "Red meat", "Physical activity", "Fruits and vegetables", "Sugary drinks", "aUPF", "Fibre"))
+
 
 # Plot each score component's correlation with metabolites (in a single heatmap)
-plot_allcor <- ggplot(all_dat, aes(score_component, compound)) +
+plot_allcor <- ggplot(all_dat_order, aes(score_component, compound)) +
   geom_tile(aes(fill = estimate)) +
   scale_fill_gradient2() + 
   xlab("Score component") + ylab("Metabolite") +
