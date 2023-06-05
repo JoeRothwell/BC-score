@@ -1,54 +1,49 @@
-# E3N cohort
-# Preparing data and calculating WCRF/AICR score
+# Preparing data and calculating WCRF/AICR score for the whole E3N cohort
+# Tidied up JR 5/6/2023
 library(tidyverse)
 library(haven)
 
 # Datasets-----------------------------------------------------------------------
 
-# Food data
+# Food data, breastfeeding, PA, fibre, BMI/WC 
 alim <- read_sas("frjour.sas7bdat")  
-
-# Breastfeeding data
 bfeed <- read_sas("d_grossesse_20190107_corrections.sas7bdat") %>% rename(ident = IDENT)
-
-# Physical activity data 
 physact <- read_sas("physicalact.sas7bdat") %>% rename(ident = IDENT) %>% select(ident, TotalAPQ3)  
-
-# Fiber data
 fiber <- read_sas("nut_fra2.sas7bdat") %>% select(ident, alcool, FIBR, SDF, TDF)  
-
-# BMI and waist size data
 size <- read_sas("anthropoq1q9_1.sas7bdat") %>% select(ident, imcq3, ttailleq4, taille, ageq3)
-
-# Breast cancer data
-cancer_postmenop <- read_sas("baseline_breast_cancer.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
-cancer <- read_sas("baseline_2.sas7bdat") %>% select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, ageq3ve, statfin_dquest) %>%
-  mutate (duree_suivi1 = agefin - ageq3ve)
+menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat") %>% select(ident, agemeno)
+educ <- read_sas("D01_20180914_niveau_etudes_Q1.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, bacfemme2)
+work <- read_sas("d02_20160404_prof_q2.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, PROFQ2_F, SALAIREF)
 # 0 : pre-menopause, 1 to 3 : post-menopause (1 unknown, 2 naturally, 3 artificially)
 
-# Menopause
-menopause <- read_sas("d01_20201103_menopauseq1q11.sas7bdat") %>% select(ident, agemeno)
+# Breast cancer data
+cancer_postmenop <- read_sas("baseline_breast_cancer.sas7bdat") %>% 
+  select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, statfin, duree_suivi, duree_suivi_1)
 
-# Education
-educ <- read_sas("D01_20180914_niveau_etudes_Q1.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, bacfemme2)
-
-# Work
-work <- read_sas("d02_20160404_prof_q2.sas7bdat") %>% mutate(ident = IDENT) %>% select(ident, PROFQ2_F, SALAIREF)
+#cancer <- read_sas("baseline_2.sas7bdat") %>% 
+#  select(ident, datepoint, ddiag, dtdc, ktous, ksein, agefin, ageq3ve, statfin_dquest) %>%
+#  mutate (duree_suivi1 = agefin - ageq3ve)
 
 # Create a single table (containing both cases and controls)
 scoredata_all <-  alim %>%
-  left_join(size, by = "ident") %>% left_join(menopause, by = "ident") %>% left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
-  left_join(physact, by = "ident") %>% left_join(cancer, by = "ident") %>% left_join(educ, by = "ident") %>% left_join(work, by = "ident")
+  left_join(size, by = "ident") %>% left_join(menopause, by = "ident") %>% 
+  left_join(fiber, by = "ident") %>% left_join(bfeed, by = "ident") %>%
+  left_join(physact, by = "ident") %>% #left_join(cancer, by = "ident") %>% 
+  left_join(educ, by = "ident") %>% 
+  left_join(work, by = "ident")
 #dim(scoredata_all) # 74 552 rows 
+
+# JR: Remove main datasets
+rm(list = c("alim", "bfeed", "physact", "fiber", "educ", "work", "menopause", "size"))
 
 # Manipulating data for score -----------------------------------------------------------------------
 
 #Renaming all columns starting with "_" (from 'alim'/frjour table)
-data_xnames_all <- scoredata_all %>%
-  rename_at(vars(starts_with('_')), funs(str_replace(., '_', 'x'))) 
+data_xnames_all <- scoredata_all %>% rename_at(vars(starts_with('_')), funs(str_replace(., '_', 'x'))) 
 
 #Calculating intakes necessary for score 
-# g/day intake of total fruits & vegetables, red meat, processed meat, sugary drinks, aUPF, total food intake and percentage of aUPF in total food intake
+# g/day intake of total fruits & vegetables, red meat, processed meat, sugary drinks, aUPF, total food intake and 
+# percentage of aUPF in total food intake
 data_xnames_sums_all <- data_xnames_all %>%
   rowwise() %>%
   mutate (fruitveg = sum(x2, x3, x35, x40, x41_2, x41_5, x41_11, x53), #g/day
@@ -72,11 +67,9 @@ data_xnames_sums_all <- data_xnames_all %>%
 #length(which(is.na(data_xnames_sums_all$imcq3))) #3 719 missing
 #length(which(is.na(data_xnames_sums_all$ttailleq4))) #10 659 missing
 #length(which(is.na(data_xnames_sums_all$allaitement_dureecum))) #3 336 missing
-# no data missing for the other categories necessary for score
 
-clean_data_all1 <- data_xnames_sums_all %>% filter(!is.na(ttailleq4))
-clean_data_all2 <- clean_data_all1 %>% filter(!is.na(imcq3))
-clean_data_all <- clean_data_all2 %>% filter(!is.na(allaitement_dureecum))
+# no data missing for the other categories necessary for score
+clean_data_all <- data_xnames_sums_all %>% filter(!is.na(ttailleq4) & !is.na(imcq3) & !is.na(allaitement_dureecum))
 # 59 268 rows remaining 
 
 # Calculate score -----------------------------------------------------------------------
@@ -146,7 +139,8 @@ df.scores_all$score_quart <- as.factor(df.scores_all$score_quart)
 
 
 # Tables with score info -----------------------------------------------------------------------
-score_varlist_all <- c("imcq3", "ttailleq4", "TotalAPQ3", "fruitveg", "TDF", "percent_aUPF", "Rmeat", "Pmeat", "sugary_drinks", "alcool", "allaitement_dureecum")
+score_varlist_all <- c("imcq3", "ttailleq4", "TotalAPQ3", "fruitveg", "TDF", "percent_aUPF", "Rmeat", "Pmeat", 
+                       "sugary_drinks", "alcool", "allaitement_dureecum")
 
 # Table containing only data relevant for the score and full score
 table_scores_all <- df.scores_all %>% select(score_varlist_all, score)
@@ -154,7 +148,8 @@ table_scores_all <- df.scores_all %>% select(score_varlist_all, score)
 # Table containing only score components
 table_components_all <- df.scores_all %>% select(score_varlist_all) %>%
 rename(BMI=imcq3, Waist_circ=ttailleq4, Physical_act=TotalAPQ3, Fruits_Veg=fruitveg, Fiber=TDF, 
-         aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=alcool, Breastfeeding=allaitement_dureecum)
+         aUPF=percent_aUPF, Red_meat=Rmeat, Processed_meat=Pmeat, Sugary_drinks=sugary_drinks, Alcohol=alcool, 
+       Breastfeeding=allaitement_dureecum)
 
 # Table to look at the score components' distribution
 table_components_all_factors <- df.scores_all %>% transmute_at(vars(sc.BMI:score), as.factor)
@@ -170,7 +165,8 @@ cat2_4_all <- df.scores_all$score_cat == 1
 cat4_6_all <- df.scores_all$score_cat == 2
 cat6_8_all <- df.scores_all$score_cat == 3
 
-#varlist_all <- c("ident", "ageq3", "alcool", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", "PROFQ2_F", "SALAIREF", "score", "score_cat")
+#varlist_all <- c("ident", "ageq3", "alcool", "nullipare", "age1ergross", "TotalAPQ3", "bacfemme2", 
+# "PROFQ2_F", "SALAIREF", "score", "score_cat")
 
 # table with women with different score categories - only a few variables
 #soc0_2_all <- df.scores_all[cat0_2_all,] %>% transmute_at(vars(varlist_all), as.factor)
